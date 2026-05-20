@@ -25,6 +25,14 @@ Route::middleware(['auth'])->group(function () {
 
     Route::view('profile', 'profile')->name('profile');
 
+    Route::get('/dashboard', function () {
+        $user = auth()->user();
+        if ($user->isProvider()) {
+            return redirect()->route('provider.dashboard');
+        }
+        return redirect()->route('home');
+    })->name('dashboard');
+
     Route::post('/logout', function (Request $request) {
         Auth::guard('web')->logout();
         $request->session()->invalidate();
