@@ -3,6 +3,7 @@
 use App\Http\Controllers\MarketplaceController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ProviderDashboardController;
+use App\Livewire\PlanBuilder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
@@ -11,6 +12,7 @@ Route::get('/', [MarketplaceController::class, 'home'])->name('home');
 Route::get('/c/{category}', [MarketplaceController::class, 'category'])->name('category');
 Route::get('/listing/{listing:slug}', [MarketplaceController::class, 'listing'])->name('listing');
 Route::post('/island/{island:slug}', [MarketplaceController::class, 'setIsland'])->name('island.set');
+Route::get('/plan', PlanBuilder::class)->name('plan');
 
 Route::middleware(['auth'])->group(function () {
     Route::get('/checkout/{listing:slug}', [OrderController::class, 'checkout'])->name('checkout');

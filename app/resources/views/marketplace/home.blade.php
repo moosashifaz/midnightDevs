@@ -51,6 +51,8 @@
     </section>
 
     <div class="w-full px-6 sm:px-10 lg:px-16 py-8">
+        <x-ui.ai-planner-teaser :island="$island" />
+
         <section class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-8">
             @foreach($categories as $cat)
                 <x-ui.category-tile

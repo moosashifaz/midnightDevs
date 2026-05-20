@@ -77,6 +77,94 @@
         @apply w-full px-6 sm:px-10 lg:px-16 py-6;
     }
 
+    [x-cloak] {
+        display: none !important;
+    }
+
+    .planner-prompt {
+        @apply relative overflow-hidden rounded-2xl border-2 border-madi-200/70 bg-white px-4 py-4 sm:px-5 sm:py-5 shadow-sm;
+    }
+
+    .planner-prompt::before {
+        content: '';
+        @apply pointer-events-none absolute inset-0 bg-gradient-to-r from-madi-50/80 via-transparent to-moodhu-50/50;
+    }
+
+    .planner-prompt-icon {
+        @apply relative z-10 flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-madi-500 to-madi-600 text-white shadow-md;
+    }
+
+    .planner-chip {
+        @apply rounded-full px-3 py-1.5 text-xs font-medium bg-moodhu-100 text-muraka-700 transition-colors duration-150 hover:bg-moodhu-200;
+    }
+
+    .planner-chip-active {
+        @apply planner-chip ring-2 ring-madi-400 bg-white text-madi-800;
+    }
+
+    .planner-range {
+        @apply h-2 w-full cursor-pointer appearance-none rounded-full bg-moodhu-200;
+    }
+
+    .planner-range:disabled {
+        @apply cursor-not-allowed opacity-50;
+    }
+
+    .planner-range::-webkit-slider-thumb {
+        @apply h-5 w-5 cursor-pointer appearance-none rounded-full border-2 border-white bg-madi-500 shadow-md transition-transform duration-150;
+        margin-top: -6px;
+    }
+
+    .planner-range:active::-webkit-slider-thumb {
+        @apply scale-110 bg-madi-600;
+    }
+
+    .planner-range::-moz-range-thumb {
+        @apply h-5 w-5 cursor-pointer rounded-full border-2 border-white bg-madi-500 shadow-md;
+    }
+
+    .planner-range::-moz-range-track {
+        @apply h-2 rounded-full bg-moodhu-200;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .planner-range::-webkit-slider-thumb {
+            transition: none;
+        }
+    }
+
+    .planner-timeline-day {
+        @apply relative pl-8 pb-8 last:pb-0;
+    }
+
+    .planner-timeline-marker {
+        @apply absolute left-0 top-1.5 w-3 h-3 rounded-full bg-madi-500 ring-4 ring-madi-100;
+    }
+
+    .planner-timeline-day:not(:last-child) .planner-timeline-marker::after {
+        content: '';
+        @apply absolute left-1/2 top-4 -translate-x-1/2 w-0.5 bg-moodhu-200;
+        height: calc(100% + 1.5rem);
+    }
+
+    .planner-timeline-content {
+        @apply min-w-0;
+    }
+
+    .planner-skeleton {
+        @apply animate-pulse rounded-xl bg-moodhu-200;
+    }
+
+    .planner-btn-spinner {
+        @apply inline-block h-5 w-5 rounded-full border-2 border-madi-200 border-t-madi-600 animate-spin;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .planner-btn-spinner {
+            @apply animate-none border-t-madi-600;
+        }
+    }
+
     /* Aerial / top-down water footage (e.g. jet skis) — keep action in frame */
     .hero-media {
         object-position: center center;
