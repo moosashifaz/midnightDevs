@@ -3,6 +3,8 @@
 use App\Http\Controllers\MarketplaceController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ProviderDashboardController;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [MarketplaceController::class, 'home'])->name('home');
@@ -22,6 +24,13 @@ Route::middleware(['auth'])->group(function () {
     });
 
     Route::view('profile', 'profile')->name('profile');
+
+    Route::post('/logout', function (Request $request) {
+        Auth::guard('web')->logout();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+        return redirect()->route('home');
+    })->name('logout');
 });
 
 require __DIR__.'/auth.php';
