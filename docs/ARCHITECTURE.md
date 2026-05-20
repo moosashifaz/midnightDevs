@@ -17,8 +17,8 @@ into <https://mermaid.live> for a larger zoomable view, or export to FigJam late
 ```mermaid
 flowchart LR
     subgraph client ["Clients"]
-        touristApp["Tourist App (iOS + Android)"]
-        providerApp["Provider App (Android)"]
+        touristApp["Tourist Web App (PWA)"]
+        providerApp["Provider Web Portal (PWA)"]
         adminWeb["Admin Web Console"]
     end
     subgraph gateway ["API Gateway"]
@@ -94,15 +94,17 @@ flowchart LR
 
 ### Clients (3)
 
-- **Tourist App** — React Native iOS + Android primary surface. All
-  consumer-facing journeys: discovery, booking, payment, chat with the AI
-  concierge, receipts. Per PRD §13 tech stack, RN is the working assumption;
-  open decision.
-- **Provider App** — Android-first because the provider side skews Android.
-  Dhivehi + English from day 1. Booking inbox, voucher scanner, earnings,
-  KYC.
-- **Admin Web Console** — internal-only. Verification queue, dispute
-  resolution, listing moderation, reporting, payout overrides.
+- **Tourist Web App (PWA)** — responsive web application, mobile-first.
+  Tourists access via QR code at the guesthouse / jetty and install to home
+  screen as a PWA for the duration of the trip. All consumer-facing journeys:
+  discovery, booking, payment, chat with the AI concierge, receipts. No native
+  iOS/Android apps in v1.
+- **Provider Web Portal (PWA)** — same responsive web app, served at a
+  provider subdomain. Mobile-first for phone use, but functional on desktop.
+  Dhivehi + English from day 1. Booking inbox, voucher scanner (browser
+  camera + WebRTC), earnings + analytics, KYC.
+- **Admin Web Console** — internal-only desktop-first web app. Verification
+  queue, dispute resolution, listing moderation, reporting, payout overrides.
 
 ### API Gateway (1)
 

@@ -2,7 +2,7 @@
 
 *Maldives in-stay services marketplace*
 
-**Status:** Draft v0.5
+**Status:** Draft v0.6
 **Owner:** @moosashifaz
 **Last updated:** 2026-05-20
 
@@ -63,7 +63,7 @@ invisibility-as-a-business-model for providers.
 
 | Segment | Description | Priority |
 |---|---|---|
-| Guesthouse tourist | Mid-market, on inhabited islands, price-sensitive, mobile-first | **P0** |
+| Guesthouse tourist | Mid-market, on inhabited islands, price-sensitive, accesses via phone browser | **P0** |
 | Liveaboard / day-tripper | Dive groups, island-hoppers, surfers | P1 |
 | Resort tourist | Premium, often confined to resort island | P2 (resort policies may block off-island engagement) |
 | Domestic / resident | Maldivian staycationers and expats | P1 (these are the users for whom Swipe-as-wallet *just works*) |
@@ -139,9 +139,15 @@ excluded (see §1 and §18).
 
 ## 7. Functional requirements
 
-### 7.1 Tourist app (P0)
+### 7.1 Tourist web app (P0)
 
-- Phone-number auth + optional email; passport scan for KYC-light **[DECIDE: needed for v1?]**
+AfterArrival is a **web application** — no native app store presence in v1. Tourists
+open it in their phone browser via a QR code scanned at the guesthouse, jetty, or
+listing. The web app is **PWA-installable** so a tourist can pin it to their home
+screen and use it like a native app for the duration of the trip.
+
+- Phone-number auth (via SMS OTP) + optional email; passport scan for KYC-light
+  **[DECIDE: needed for v1?]**
 - Browse by category, search, map view scoped to current/selected island
 - Listing detail: photo carousel, description, price in USD/MVR toggle, TGST shown
   separately, host profile, reviews, cancellation policy
@@ -154,18 +160,66 @@ excluded (see §1 and §18).
 - Multi-language: **English** v1; Dhivehi v2; Chinese/Russian v3 based on arrival data
 - Financial Advisor surfaces — price-in-both-currencies, TGST itemization, trip budget
   tracker, end-of-trip spend summary (see §10 for full scope)
+- Mobile-first responsive design — tourists overwhelmingly access via phone
+- PWA capabilities: offline shell, install prompt, push notifications, home-screen icon
 
-### 7.2 Provider app / web portal (P0)
+### 7.2 Provider web portal (P0)
 
 - Sign-up with NID + business reg
 - KYC: NID front/back, selfie, business registration doc, BML account linking
 - Listing manager: create/edit/disable, photos, pricing rules, availability calendar
 - Booking inbox: confirm, decline (with reason), reschedule
-- Voucher scanner (camera-based QR scan to mark fulfilled)
-- Earnings dashboard: pending, in escrow, paid out, fees, TGST collected
-- Payout history
-- In-app chat
+- Voucher scanner (browser camera + WebRTC QR scan to mark fulfilled)
+- Earnings dashboard (v1): pending, in escrow, paid out, fees, TGST collected; payout history
+- Provider analytics dashboard (v2 — see §7.2.1)
+- In-app chat (post-booking)
+- Language tooling (v2 — see §7.2.2)
 - Dhivehi UI from day 1 (the provider side must speak Dhivehi)
+- PWA-installable so providers can pin it to their phone home screen and use it like a native app
+
+### 7.2.1 Provider analytics dashboard (v2)
+
+Earnings alone aren't enough — providers need demand signals to plan capacity
+(food prep, laundry throughput, class scheduling). The v2 analytics dashboard
+surfaces:
+
+- **Booking funnel** — listing views → adds-to-checkout → bookings initiated →
+  bookings completed → reviewed. Conversion at each step.
+- **Peak times** — heatmap of when bookings happen vs. when service is delivered.
+  Helps a guesthouse café staff its kitchen; helps a dive operator schedule guides.
+- **Cancellation reasons** — aggregated reasons from declined / cancelled
+  bookings so providers see what's costing them business (price too high, wrong
+  category, weather, etc.).
+- **Demand benchmarks** — comparative against category peers on the same island,
+  same season. ("Cafés on Maafushi average 45 bookings/week in shoulder season;
+  you're at 32.")
+- **Review insights** — most-common positive and negative review terms,
+  summarized with light LLM extraction.
+- **Export** — CSV / PDF for accounting and TGST returns.
+
+v1 ships earnings + payout history only. v2 ships the full dashboard. The AI
+agent (§11) becomes the natural surface for "ask your dashboard a question" in
+v3 (e.g. *"Why did my Saturday bookings drop last week?"*).
+
+### 7.2.2 Language tooling (v2)
+
+Providers speak Dhivehi; tourists speak English (and progressively Chinese,
+Russian, German per arrival data). In v1, providers get a Dhivehi UI. In v2, we
+add a symmetric translation layer that mirrors the tourist-side capability in §11:
+
+- **Auto-translate incoming chat** — tourist writes in English; provider sees
+  Dhivehi inline alongside the original message.
+- **Suggested reply in both languages** — provider types a reply in Dhivehi; the
+  app drafts a polished English version they can edit and send.
+- **Voice-to-text in Dhivehi** — for providers who type slowly but speak fluently
+  on a phone keyboard.
+- **Listing copywriting assist** — provider drafts a listing in Dhivehi; the app
+  produces an English version polished for international tourists (and vice
+  versa). This is the same capability as the §11 v4 provider-side AI assistant.
+
+The translation backend is shared with the AI agent's `translate` tool, so when
+v3 adds Chinese / Russian / German for tourists, those languages surface on the
+provider side at the same time without separate engineering.
 
 ### 7.3 Admin / ops (P0)
 
@@ -189,8 +243,9 @@ excluded (see §1 and §18).
   provider app can validate offline against a cached public key.
 - **Performance.** Listing browse < 2s on a 3G connection from an outer atoll.
 - **Localization.** Currency, date, language; price always shown in *both* USD and MVR.
-- **Accessibility.** WCAG AA on the tourist web/app; provider app must be usable on
-  low-end Android (we should set a target floor — e.g. Android 9, 2GB RAM).
+- **Accessibility.** WCAG AA on the tourist web app. Provider web portal must be
+  usable on low-end Android phones via Chrome (target floor: Android 9, 2GB RAM,
+  Chromium 90+).
 - **Data residency.** **[DECIDE]** Maldives has no strict data-residency law today, but
   TGST + financial records likely need to be retained for MIRA audits (7 years).
 
@@ -444,21 +499,26 @@ flow, and exposes them through a chat interface.
 
 ## 14. Tech stack (initial proposal — open to change)
 
-- **Mobile:** React Native (one codebase, iOS + Android, hot fixes) — or native if
-  performance demands it. **[DECIDE]**
-- **Backend:** [DECIDE — Go / Node / Python]. Go aligns with the Swipe SDK ergonomics
-  but team familiarity matters more.
+- **Frontend:** Web application — **[DECIDE: Next.js (React) vs Remix vs SvelteKit]**.
+  Default recommendation: Next.js (broad ecosystem, server components for perf on
+  3G outer-atoll connections, easy PWA support, good Vercel/Cloudflare hosting).
+- **Mobile experience:** Mobile-first responsive design + PWA (no native apps in v1).
+  Tourists install via "Add to Home Screen"; providers get a PWA pinned on the
+  phone or accessed via desktop browser.
+- **Backend:** **[DECIDE — Go / Node / Python]**. Go aligns with the Swipe SDK
+  ergonomics but team familiarity matters more.
 - **DB:** Postgres + Redis.
 - **Payments:** Swipe (BML) + a card PSP **[DECIDE]**.
 - **Maps:** Mapbox or Google Maps (Maldives island-level granularity is patchy on both).
-- **Hosting:** Cloud provider with low-latency to South Asia (AWS Mumbai or Singapore).
+- **Hosting:** Cloud provider with low-latency to South Asia (AWS Mumbai or Singapore);
+  edge CDN (Cloudflare / CloudFront) in front for the web app shell.
 - **Observability:** OpenTelemetry → managed backend.
 
 ## 15. MVP scope (what ships in v1)
 
 **In:**
-- Tourist app (iOS + Android, English only)
-- Provider app (Android first — provider side skews Android; Dhivehi + English)
+- Tourist web app (responsive + PWA-installable, English only)
+- Provider web portal (responsive + PWA-installable, Dhivehi + English)
 - Categories: Eat, Wash, Buy (pickup), Do (curated only)
 - Card + Swipe payment, escrow, weekly payouts
 - Booking voucher with offline QR validation
