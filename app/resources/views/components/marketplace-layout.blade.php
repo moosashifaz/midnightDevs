@@ -84,6 +84,8 @@
         @livewire('a-i-chat')
     @endauth
 
+    <x-ui.site-footer />
+
     @livewireScripts
 </body>
 </html>
