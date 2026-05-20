@@ -1,6 +1,6 @@
 # PRD — Maldives Local Services Marketplace (working title)
 
-**Status:** Draft v0.3
+**Status:** Draft v0.4
 **Owner:** @moosashifaz
 **Last updated:** 2026-05-20
 
@@ -16,13 +16,14 @@ A two-sided marketplace connecting tourists *already in the Maldives* with local
 service providers on inhabited islands — laundry, souvenir shops, local food,
 training/classes, experiences, retail, wellness, and other day-to-day services
 consumed *during* a stay. The platform handles discovery, booking, payment, and trust,
-with BML Swipe as the domestic settlement rail for paying providers.
+with [BML Swipe](https://github.com/BML-Digital/swipe-merchants-dev) as the domestic
+settlement rail for paying providers.
 
 **Explicitly NOT a part of this product:** accommodation / room booking, arrival
 transfers (airport → island), and inter-island transport. Those are large,
 well-served categories with entrenched players (Booking.com, Airbnb, resort
 transfer desks). The tourist arrives and is housed via someone else; this app
-covers everything they spend on *while they are here*. See §17.
+covers everything they spend on *while they are here*. See §18.
 
 The product exists because today this in-stay services market runs on word of mouth,
 paper signs at the jetty, and cash — which is inconvenient for tourists and
@@ -77,7 +78,7 @@ invisibility-as-a-business-model for providers.
 | Photography | Beach / honeymoon photographer, drone, videographer | P2 |
 
 *(Accommodation, arrival transfers, and inter-island transport are deliberately
-excluded from supply — see §1 and §17.)*
+excluded from supply — see §1 and §18.)*
 
 ## 4. Value proposition
 
@@ -89,7 +90,8 @@ built-in financial advisor that turns USD/MVR confusion, mystery fees, and "is
 this a fair price?" anxiety into transparent, in-context guidance (see §10).**
 
 We do not book your room, your airport transfer, or your inter-island boat — by
-design.
+design. An **AI concierge** (see §11) sits across the whole app, ready to answer
+"where, when, how much, is this OK?" in plain language.
 
 **For providers:** a free storefront, a booking calendar, instant digital payments to
 their BML account, and a customer base they couldn't otherwise reach.
@@ -131,7 +133,7 @@ Rationale: laundry + food cover the daily-need surface for a guesthouse tourist;
 one of these will be opened almost every day of their stay, which is what we need
 for habit formation. Souvenirs and excursions are higher-AOV but lower-frequency.
 Accommodation, arrival transfers, and inter-island transport are deliberately
-excluded (see §1 and §17).
+excluded (see §1 and §18).
 
 ## 7. Functional requirements
 
@@ -273,6 +275,8 @@ for licensed advice.
 - **Home tab** — budget remaining, daily burn rate, runway-to-departure.
 - **Trip summary screen** — end-of-trip report on the day of departure.
 - **Settings** — currency preference, rate source, advisor on/off.
+- **AI agent chat** (see §11) — the same advisor data is reachable conversationally
+  ("Is MVR 80 fair for laundry?", "How much have I spent this trip?").
 
 ### 10.4 Non-goals
 
@@ -312,7 +316,107 @@ for licensed advice.
 - **Disclaimer** — every advisor surface carries a short "Informational only — confirm
   with [authority] for binding figures."
 
-## 11. Trust & safety
+## 11. AI Agent — tourist concierge
+
+A conversational AI agent that acts as a 24/7 concierge for tourists — answering
+questions, recommending listings, helping book, troubleshooting issues, and translating.
+The agent is the connective tissue across the rest of the app: it reaches into the
+Financial Advisor (§10), the listing catalogue, the booking system, and the dispute
+flow, and exposes them through a chat interface.
+
+### 11.1 Why a chatbot, not just better menus
+
+- Tourists ask questions in natural language ("Can I swim here in a bikini?",
+  "Where can I get laundry done by 6 today?"), not in app navigation paths.
+- The questions span categories — financial, cultural, logistical, booking,
+  dispute — in a way a single menu cannot represent cleanly.
+- Many tourists are first-time visitors with very little local context. A
+  conversational interface lets them ask "obvious" questions without
+  embarrassment or wading through documentation.
+- The agent also captures intent we would otherwise miss — what tourists *try* to
+  ask for that we don't currently offer is itself a roadmap signal.
+
+### 11.2 Capabilities
+
+| Capability | Example query |
+|---|---|
+| **Catalogue search** | "Find me a vegetarian dinner under MVR 200 within walking distance." |
+| **Personalized recommendation** | "I have 4 hours this afternoon and I've never snorkeled — what should I do?" |
+| **Financial questions** | "Is MVR 80 a fair price for laundry here?" — pulls from §10 benchmarks. |
+| **Cultural & etiquette** | "Can I wear a bikini on this beach?", "What should I wear visiting the mosque?", "Are restaurants open during Ramadan daytime?" |
+| **Logistical info (read-only)** | "Where's the nearest pharmacy?", "What time is the last ferry?" (purely informational; transfers and transport are not bookable per §18.1.) |
+| **Booking assistance** | "Book me a sunset cruise for two tomorrow at 5pm." → confirms slot, pricing, cancellation policy, then triggers checkout. |
+| **Post-booking support** | "My snorkel trip got cancelled, what now?" |
+| **Dispute filing** | "The laundry came back damaged — what do I do?" → walks them through evidence upload + opens a dispute. |
+| **Translation** | Real-time English ↔ Dhivehi for chats with providers, menus, signage. |
+| **Emergency triage** | "I cut my foot on coral, what should I do?" → first-aid info, nearest clinic, with a prominent "call emergency services" CTA when warranted. |
+
+### 11.3 Surfaces
+
+- **Floating chat button** persistent across the app.
+- **Dedicated "Ask" tab** in the bottom navigation.
+- **Voice input** for hands-free use on the beach / on a boat (v3).
+- **Proactive nudges** via push: "Heavy rain forecast tomorrow — reschedule your boat trip?", "Your laundry is ready for pickup." (v2)
+- **In-receipt help** ("Was something wrong with this?") to lower the floor for dispute initiation.
+
+### 11.4 Non-goals
+
+- **Not the only booking interface.** Visual browse + tap remains the primary path; the agent is an alternative, not a replacement.
+- **Not human support.** Escalates to a human concierge for emergencies, disputes above a value threshold, or repeated low-confidence answers.
+- **Not authoritative on medical, legal, or financial matters.** Every such answer carries a disclaimer and a link to a real authority (MIRA, Ministry of Health, embassy).
+- **Not a provider tool in v1.** A provider-side AI assistant (listing copywriting, response drafting) is a v4 effort.
+- **Not for prohibited topics** (alcohol, drugs, adult content — per §18.1). The agent refuses politely and explains why.
+
+### 11.5 Architecture (proposal — **[DECIDE]**)
+
+- **Model:** Claude (Haiku as default for cheap routing, Sonnet for most queries, Opus for complex multi-step reasoning). **[DECIDE]** — alternatives include GPT-4-class via OpenAI, or self-hosted open-weight for cost / data-residency reasons.
+- **Retrieval-augmented:** real-time platform data (listings, prices, availability, opening hours, weather) injected into context per query. Static knowledge base for cultural / legal / etiquette content.
+- **Tool use:** a defined set of tools the agent can invoke — `search_listings`, `check_availability`, `start_booking`, `get_benchmark_price`, `file_dispute`, `translate`, `escalate_to_human`.
+- **Memory:** per-trip context (island, dates, budget, prior conversations, completed bookings). Auto-purged 30 days after trip end.
+- **Streaming:** responses stream token-by-token to mask latency on poor connections.
+- **Caching:** aggressive prompt caching of system prompts + listing catalogue to control cost.
+- **Guardrails:** refusals for prohibited categories; explicit "I don't know — here's how to find out" for low-confidence queries; never invents prices, hours, or contact details.
+
+### 11.6 MVP cut
+
+**v1:**
+- Text chat in English only.
+- Read-only Q&A: catalogue search, financial questions, cultural/etiquette info, logistical lookups.
+- Tools: `search_listings`, `get_benchmark_price` only.
+- "Talk to a human" CTA always visible.
+
+**v2:**
+- Booking assistance (tool: `start_booking`).
+- Post-booking support and dispute filing (tools: `file_dispute`, `escalate_to_human`).
+- Translation (English ↔ Dhivehi inside provider chat).
+- Proactive nudges.
+
+**v3:**
+- Voice input.
+- Dhivehi as a *conversation language* (not just translation).
+- Additional languages — Chinese, Russian, German — informed by arrival data.
+
+**v4:**
+- Provider-side assistant: listing copywriting, message drafting, dispute response prep.
+
+### 11.7 Safety, privacy, and accuracy
+
+- **Conversation log retention:** encrypted at rest, retained 30 days post-trip, then purged unless attached to an open dispute.
+- **PII redaction** before any conversation is used for model fine-tuning or evaluation.
+- **No medical / legal / financial *advice*** — only *information* with disclaimers and links to authorities.
+- **Hallucination guardrails:** the agent must not invent listings, prices, opening hours, or contact details. If retrieval returns nothing, it says so.
+- **AI disclosure:** every conversation surface clearly labelled "AI assistant — confirm important details with a person or the official source."
+- **Refusal categories:** prohibited Maldives categories (§18.1), instructions to evade Maldivian law, anything that could endanger the tourist.
+- **Audit log:** every booking or dispute action taken by the agent is logged and reviewable by ops.
+
+### 11.8 Cost
+
+- LLM cost per conversation depends on context size and model choice.
+- **[DECIDE based on traffic projections]** — target ≤ ~$0.05 per active tourist per day at Sonnet pricing with prompt caching and a ~2k-token retrieval window. Per-user daily budget cap to prevent abuse.
+- Haiku-as-default for simple queries; escalate to Sonnet / Opus only when reasoning depth is required.
+- Static knowledge base + per-island catalogue aggressively prompt-cached.
+
+## 12. Trust & safety
 
 - **Provider verification.** NID + business reg + selfie liveness check. Tiered
   trust badge: Verified / Verified+ (with on-site visit).
@@ -325,7 +429,7 @@ for licensed advice.
   do we require provider-side insurance evidence at onboarding? Liability exposure is
   real if we don't.
 
-## 12. Compliance & regulatory
+## 13. Compliance & regulatory
 
 - **MIRA** — Maldives Inland Revenue Authority. TGST registration, monthly returns.
 - **Ministry of Tourism** — tourism operators may need licensing; investigate whether the
@@ -336,7 +440,7 @@ for licensed advice.
 - **AML/KYC** — provider onboarding KYC; tourist KYC likely not required for low-value
   transactions, but card-processor rules may impose limits.
 
-## 13. Tech stack (initial proposal — open to change)
+## 14. Tech stack (initial proposal — open to change)
 
 - **Mobile:** React Native (one codebase, iOS + Android, hot fixes) — or native if
   performance demands it. **[DECIDE]**
@@ -348,7 +452,7 @@ for licensed advice.
 - **Hosting:** Cloud provider with low-latency to South Asia (AWS Mumbai or Singapore).
 - **Observability:** OpenTelemetry → managed backend.
 
-## 14. MVP scope (what ships in v1)
+## 15. MVP scope (what ships in v1)
 
 **In:**
 - Tourist app (iOS + Android, English only)
@@ -359,6 +463,9 @@ for licensed advice.
 - Reviews, in-app chat, basic disputes
 - Financial Advisor v1: USD/MVR toggle, TGST itemization, budget tracker, end-of-trip
   spend summary (see §10.5)
+- AI Agent v1: English text chat, read-only Q&A (catalogue search, financial, cultural,
+  logistical), `search_listings` + `get_benchmark_price` tools, "talk to a human" CTA
+  (see §11.6)
 - Admin console: verification + dispute + payouts
 - 1–2 pilot islands **[DECIDE: which]** — recommend Maafushi (highest guesthouse density)
   and possibly Thulusdhoo or Ukulhas
@@ -373,12 +480,12 @@ for licensed advice.
 - Resort-side integration
 - Multi-language beyond English + Dhivehi
 
-**Permanently out of the product (not just v1) — see §17:**
+**Permanently out of the product (not just v1) — see §18:**
 - Accommodation / room booking
 - Arrival transfers (airport → island, seaplane, domestic flight)
 - Inter-island transport (dhoni, speedboat, taxi)
 
-## 15. Success metrics (first 6 months post-launch)
+## 16. Success metrics (first 6 months post-launch)
 
 | Metric | Target |
 |---|---|
@@ -392,7 +499,7 @@ for licensed advice.
 | Dispute rate | < 2% of bookings |
 | Time-to-payout (booking → provider funds available) | ≤ 10 days |
 
-## 16. Risks
+## 17. Risks
 
 | Risk | Likelihood | Mitigation |
 |---|---|---|
@@ -404,10 +511,12 @@ for licensed advice.
 | Connectivity at point of service | High | Offline voucher validation built in from day 1 |
 | Tourist trust without brand recognition | High | Partner with established guesthouses for QR-code in-room distribution; visible verification badges; in-app concierge for first-trip nerves |
 | Regulatory shift on tourism brokering | Low–Medium | Government affairs from week 1 |
+| **LLM hallucination on safety / legal / medical queries** | Medium | Strict refusal categories; retrieval-grounded answers only; visible AI-assistant disclosure; human escalation always one tap away (§11.7) |
+| **LLM cost blowout** at scale | Medium | Per-tourist daily budget cap; Haiku-as-default with Sonnet/Opus escalation; aggressive prompt caching of static knowledge + catalogue (§11.8) |
 
-## 17. Out of scope
+## 18. Out of scope
 
-### 17.1 Permanently out — not just v1
+### 18.1 Permanently out — not just v1
 
 These are **deliberately excluded from the product**, not deferred. The user (and team)
 have decided this app does not enter these spaces, in order to focus on the in-stay
@@ -430,7 +539,7 @@ services layer and avoid head-on competition with entrenched players.
   protected zones, and any wildlife-interaction listing that violates conservation
   law (turtle riding, manta touching, unlicensed shark feeding).
 
-### 17.2 Deferred to v2+ (not v1, but on the roadmap)
+### 18.2 Deferred to v2+ (not v1, but on the roadmap)
 
 - Wellness / spa
 - Photography (beach / honeymoon photographers, drone, videography)
@@ -440,7 +549,7 @@ services layer and avoid head-on competition with entrenched players.
 - Loyalty / referral programs
 - Multi-language beyond English + Dhivehi
 
-## 18. Open decisions blocking detailed planning
+## 19. Open decisions blocking detailed planning
 
 1. **Pilot island(s)** — Maafushi alone or Maafushi + one other?
 2. **Card PSP** — which acquirer/processor?
@@ -463,6 +572,16 @@ services layer and avoid head-on competition with entrenched players.
     jetty signage on pilot islands, Maldives Tourism Promotion Board partnership,
     Booking.com / Airbnb host-info-pack inclusion. Needs a deliberate go-to-market
     plan before launch.
+13. **AI model choice** — Claude (Haiku / Sonnet / Opus mix) vs GPT-4-class vs
+    self-hosted open-weight. Trade-off is cost, latency, data residency, and how
+    well the model handles Dhivehi + Maldives-specific cultural context.
+14. **AI knowledge-base ownership** — who curates the static cultural / legal /
+    etiquette / first-aid knowledge base the agent answers from? Internal content
+    team, an external partner (e.g. MTPB), or a hybrid?
+15. **AI scope on transport/accommodation queries** — the agent can *answer*
+    questions like "where's the ferry?" or "good guesthouses on this island?" even
+    though we don't *book* those. Should it? If yes, do we link out to
+    Booking.com / Atoll Transfer, or stay neutral?
 
 ---
 
