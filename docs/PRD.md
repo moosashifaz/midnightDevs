@@ -2,7 +2,7 @@
 
 *Maldives in-stay services marketplace*
 
-**Status:** Draft v0.6
+**Status:** Draft v0.7
 **Owner:** @moosashifaz
 **Last updated:** 2026-05-20
 
@@ -292,6 +292,95 @@ low-AOV (laundry, food under ~MVR 200), and 15% for experiences/excursions.
   be handled either by reversing from platform float or by an out-of-band BML process.
   This needs confirmation with BML before launch.
 
+### 9.6 Loyalty & rewards — "Pearls"
+
+Tourist visitors to the Maldives present an unusual loyalty design challenge:
+most are **one-trip-in-a-lifetime** visitors. The program is therefore optimized
+for **in-trip frequency** first, **returning-visitor benefits** second, and
+**referral** third — *not* the usual cross-trip retention loop.
+
+#### 9.6.1 Mechanic
+
+- **Earn** — every booking earns the tourist 5% back in **Pearls** (working
+  name **[DECIDE: brand]** — Maldives is the "Pearl of the Indian Ocean"; other
+  candidates: AfterArrival Credits, Sands, Tides).
+- **Redeem** — Pearls apply automatically as a discount on subsequent bookings
+  within the same trip. Tourist sees the original price with the Pearl discount
+  itemized at checkout.
+- **Expiry** — Pearls expire 30 days after trip departure. Any residual balance
+  converts to a "Welcome Back" credit, valid 24 months — applies on the next
+  AfterArrival session if the tourist returns to the Maldives.
+- **Cost ownership** — the cashback is funded from platform commission, not
+  provider revenue. Providers see no payout impact.
+
+#### 9.6.2 Why this design fits Maldives
+
+- **One-trip-in-a-lifetime reality** — in-trip redemption matters far more than
+  cross-trip retention; the program design reflects that.
+- **Reinforces the Financial Advisor (§10) narrative** — tourists see effective
+  trip cost go down as they engage. Pearls balance is a first-class element of
+  the budget tracker.
+- **Drives second / third booking** in the same trip without the platform
+  appearing to discount any individual listing — preserves provider pricing.
+- **Provider-payout-neutral** — supply-side economics are shielded from loyalty
+  spend.
+
+#### 9.6.3 Phased rollout
+
+**v1 (MVP)**
+- Flat 5% Pearls earned on every booking, in-trip redemption.
+- Balance visible in profile, checkout, budget tracker, and AI-agent responses.
+- Expiry at trip end + 30 days.
+
+**v2**
+- **Tier system** — Bronze (5%, default) / Silver (8%, trip spend > $200) /
+  Gold (12%, > $500). Tier unlocks within the current trip.
+- **Reviews-as-Pearls** — verified review earns small credit; photo review more.
+- **Referral program** — tourist invites a friend; both get $10 in Pearls when
+  the friend completes their first booking.
+
+**v3**
+- **"Welcome Back"** — returning tourists within 24 months arrive with their
+  previous tier reinstated + a small welcome credit.
+- **Streak / completion rewards** — book one service in each category and unlock
+  a free F&B item; gamifies discovery breadth.
+- **Partner perks** — Gold/Silver members get discounts at partnered guesthouses
+  off-platform (mutual referral tie-in with §17 distribution strategy).
+
+#### 9.6.4 Cost & accounting
+
+- At 5% cashback funded by platform commission, the marginal cost on an MVR
+  1,000 booking is MVR 50 — roughly a third of platform take after PSP fees.
+- **Break-even condition:** a ~25% lift in bookings-per-active-tourist. That's
+  the headline metric to watch.
+- v2 tiering protects margins by gating richer earn rates behind higher trip
+  spend (high-spend cohort has lower marginal cost of activation).
+- The 24-month "Welcome Back" credits cost near-zero in aggregate (most expire
+  unused) while providing a strong retention narrative for the small repeat-
+  visitor share.
+
+#### 9.6.5 Non-goals
+
+- **Not a payment instrument.** Pearls are a discount accounting credit, not
+  stored value — cannot be withdrawn or transferred. Keeps the program out of
+  financial-services regulation.
+- **Not a separate sign-up.** Every tourist who creates an account is auto-
+  enrolled; no opt-in friction.
+- **Not provider-funded by default.** Providers can opt into v3+ boost
+  promotions where they fund extra Pearls on specific listings, but the base
+  5% comes from platform margin.
+- **Not transferable** to third parties.
+
+#### 9.6.6 Open decisions
+
+1. **Branded name** — Pearls vs AfterArrival Credits vs Sands vs Tides. Pearls
+   is the favored working name but needs trademark / domain check.
+2. **v1 cashback rate** — 5% is a placeholder; needs modeling against
+   commission take-rate by category.
+3. **Welcome Back window** — 24 months proposed; 12 / 36 also plausible.
+4. **Referral program timing** — v2 or pull into v1? Cheap to build; strong
+   tourist-acquisition lever.
+
 ## 10. Financial Advisor for Tourists
 
 A standout feature distinguishing this app from a generic booking marketplace: a built-in
@@ -400,6 +489,7 @@ flow, and exposes them through a chat interface.
 | **Catalogue search** | "Find me a vegetarian dinner under MVR 200 within walking distance." |
 | **Personalized recommendation** | "I have 4 hours this afternoon and I've never snorkeled — what should I do?" |
 | **Financial questions** | "Is MVR 80 a fair price for laundry here?" — pulls from §10 benchmarks. |
+| **Loyalty / Pearls** | "How many Pearls do I have?", "What can I use my Pearls on?" — reads from §9.6 ledger. |
 | **Cultural & etiquette** | "Can I wear a bikini on this beach?", "What should I wear visiting the mosque?", "Are restaurants open during Ramadan daytime?" |
 | **Logistical info (read-only)** | "Where's the nearest pharmacy?", "What time is the last ferry?" (purely informational; transfers and transport are not bookable per §18.1.) |
 | **Booking assistance** | "Book me a sunset cruise for two tomorrow at 5pm." → confirms slot, pricing, cancellation policy, then triggers checkout. |
@@ -528,6 +618,8 @@ flow, and exposes them through a chat interface.
 - AI Agent v1: English text chat, read-only Q&A (catalogue search, financial, cultural,
   logistical), `search_listings` + `get_benchmark_price` tools, "talk to a human" CTA
   (see §11.6)
+- Loyalty v1: flat 5% Pearls cashback on every booking, in-trip auto-redeem, balance
+  visible in profile + checkout + budget tracker (see §9.6.3)
 - Admin console: verification + dispute + payouts
 - 1–2 pilot islands **[DECIDE: which]** — recommend Maafushi (highest guesthouse density)
   and possibly Thulusdhoo or Ukulhas
@@ -644,6 +736,12 @@ services layer and avoid head-on competition with entrenched players.
     questions like "where's the ferry?" or "good guesthouses on this island?" even
     though we don't *book* those. Should it? If yes, do we link out to
     Booking.com / Atoll Transfer, or stay neutral?
+16. **Loyalty currency name** — "Pearls" (Maldives is the Pearl of the Indian
+    Ocean), AfterArrival Credits, Sands, Tides? See §9.6.6.
+17. **Loyalty cashback rate** — 5% v1 placeholder needs modeling against
+    category take-rate; rate may vary by category once analytics land.
+18. **Referral program in v1 or v2?** Cheap to build, strong acquisition lever
+    with no accommodation funnel (see §17 risks).
 
 ---
 
