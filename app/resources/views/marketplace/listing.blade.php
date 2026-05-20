@@ -1,5 +1,5 @@
 <x-marketplace-layout>
-    <div class="page-wrap">
+    <div class="page-wrap max-w-7xl mx-auto">
     <a href="{{ route('category', $listing->category) }}" class="inline-flex items-center gap-1 text-sm text-miyaru-700 hover:text-madi-600 font-medium transition-colors duration-150 mb-3">
         <x-icons.icon name="chevron-left" class="w-4 h-4" />
         Back to {{ $listing->categoryLabel() }}
@@ -92,9 +92,9 @@
     </article>
 
     @if($related->isNotEmpty())
-        <section class="mt-10">
+        <section class="mt-20">
             <h2 class="section-title mb-3">More in {{ $listing->categoryLabel() }}</h2>
-            <div class="grid sm:grid-cols-3 gap-4">
+            <div class="grid sm:grid-cols-4 gap-4">
                 @foreach($related as $r)
                     <x-ui.listing-card :listing="$r" />
                 @endforeach

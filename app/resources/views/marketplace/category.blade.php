@@ -6,7 +6,7 @@
             <div class="flex items-center gap-4">
             <div class="text-3xl sm:text-4xl font-bold text-muraka-900">{{ $label }}</div>
             @if($description)
-                <p class="text-sm text-muraka-600 max-w-2xl border-l-4 border-muraka-500 pl-4 py-3">{{ $description }}</p>
+                <p class="text-sm text-muraka-600 max-w-2xl border-l border-gray-200 pl-4 py-3">{{ $description }}</p>
             @endif
             </div>
         </div>
