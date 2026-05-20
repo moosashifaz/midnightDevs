@@ -4,18 +4,32 @@ namespace App\Services;
 
 use App\Models\Listing;
 use App\Models\User;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 /**
- * AfterArrival's AI Concierge agent.
+ * AfterArrival's AI Concierge — Anthropic Messages API.
  *
- * In mock mode this returns canned, deterministic responses keyed off simple
- * keyword routing — enough to demonstrate the chat surface in a hackathon
- * setting. Swap config('services.anthropic.mock') to false to wire in a real
- * Anthropic SDK call. The shape of the response is intentionally close to
- * what tool-using Claude would return so the upgrade is a drop-in.
+ * Dynamic, modern conversation: the system prompt is built per-request from
+ * the user's trip context + a fresh snapshot of available listings on their
+ * island. The agent answers as a warm Maldivian-friendly local guide, never
+ * inventing inventory, citing prices in MVR + USD, and refusing categories
+ * that are out of scope or illegal on inhabited islands.
+ *
+ * Set ANTHROPIC_MOCK=true in .env to fall back to deterministic keyword
+ * routing for offline demos.
  */
 class AIAgentService
 {
+    public const ANTHROPIC_ENDPOINT = 'https://api.anthropic.com/v1/messages';
+    public const ANTHROPIC_VERSION = '2023-06-01';
+
+    /**
+     * Maximum number of past turns to send with each request — keeps
+     * context cost bounded while preserving recent conversation memory.
+     */
+    public const HISTORY_CAP = 20;
+
     public function __construct(
         protected ?string $apiKey,
         protected string $model,
@@ -23,22 +37,235 @@ class AIAgentService
     ) {
     }
 
-    public function reply(string $message, ?User $user = null): array
+    /**
+     * Get a reply for the user's most recent message.
+     *
+     * @param  array<int, array{role: string, content: string}>  $history
+     *   Prior conversation turns (user/assistant). The latest user message
+     *   should be passed separately as $message.
+     */
+    public function reply(string $message, ?User $user = null, array $history = []): array
     {
         $message = trim($message);
-        $lower = strtolower($message);
 
-        if ($this->mock) {
-            return $this->mockReply($lower, $user);
+        if ($this->mock || ! $this->apiKey) {
+            return $this->mockReply(strtolower($message), $user);
         }
 
-        return $this->liveReply($message, $user);
+        try {
+            return $this->liveReply($message, $user, $history);
+        } catch (\Throwable $e) {
+            Log::error('anthropic.api.exception', [
+                'message' => $e->getMessage(),
+                'class' => $e::class,
+            ]);
+
+            return $this->response(
+                "I had trouble connecting just now. Try again in a moment — or browse the categories above for what you need."
+            );
+        }
+    }
+
+    /**
+     * Real Anthropic Messages API call.
+     */
+    protected function liveReply(string $message, ?User $user, array $history): array
+    {
+        $system = $this->buildSystemPrompt($user);
+        $messages = $this->prepareMessages($history, $message);
+
+        $response = Http::withHeaders([
+            'x-api-key' => $this->apiKey,
+            'anthropic-version' => self::ANTHROPIC_VERSION,
+            'content-type' => 'application/json',
+        ])
+            ->timeout(60)
+            ->retry(2, 250, throw: false)
+            ->post(self::ANTHROPIC_ENDPOINT, [
+                'model' => $this->model,
+                'max_tokens' => 1024,
+                'system' => $system,
+                'messages' => $messages,
+            ]);
+
+        if ($response->failed()) {
+            Log::error('anthropic.api.failed', [
+                'status' => $response->status(),
+                'body' => $response->body(),
+            ]);
+
+            return $this->response(
+                "I'm having trouble reaching the concierge brain. Try again in a moment, or browse the categories directly."
+            );
+        }
+
+        $data = $response->json();
+
+        $text = collect($data['content'] ?? [])
+            ->where('type', 'text')
+            ->pluck('text')
+            ->implode('');
+
+        if ($text === '') {
+            return $this->response("I'm not sure how to help with that — try asking about food, laundry, souvenirs, experiences, or prices on the island.");
+        }
+
+        return [
+            'role' => 'assistant',
+            'content' => $text,
+            'model' => $data['model'] ?? $this->model,
+            'usage' => $data['usage'] ?? null,
+            'timestamp' => now()->toIso8601String(),
+        ];
+    }
+
+    /**
+     * Build the dynamic system prompt with user context + live listings.
+     */
+    protected function buildSystemPrompt(?User $user): string
+    {
+        $userBlock = '';
+        $listingsBlock = '';
+
+        if ($user) {
+            $island = $user->currentIsland;
+            $name = explode(' ', $user->name)[0] ?? null;
+
+            $userLines = ['## About the user'];
+            if ($name) {
+                $userLines[] = "- First name: {$name}";
+            }
+            if ($island) {
+                $atoll = $island->atoll ? " ({$island->atoll} Atoll)" : '';
+                $userLines[] = "- Currently staying on: {$island->name}{$atoll}";
+            }
+            if ($user->trip_start) {
+                $end = $user->trip_end ? $user->trip_end->format('M j') : 'unknown';
+                $userLines[] = "- Trip dates: {$user->trip_start->format('M j')} → {$end}";
+                $remaining = now()->diffInDays($user->trip_end ?? now(), false);
+                if ($remaining > 0) {
+                    $userLines[] = "- Days left on island: {$remaining}";
+                }
+            }
+            $userLines[] = "- Currency preference: {$user->currency_preference}";
+            $userBlock = "\n\n" . implode("\n", $userLines);
+
+            if ($island) {
+                $listings = Listing::with('provider')
+                    ->where('island_id', $island->id)
+                    ->where('is_active', true)
+                    ->orderBy('category')
+                    ->orderByDesc('rating')
+                    ->get();
+
+                if ($listings->isNotEmpty()) {
+                    $lines = ["\n## Live listings on {$island->name} right now",
+                        "(use ONLY these when recommending — do not invent others)"];
+
+                    foreach ($listings->groupBy('category') as $cat => $items) {
+                        $catLabel = Listing::CATEGORIES[$cat] ?? ucfirst((string) $cat);
+                        $lines[] = "\n### {$catLabel}";
+                        foreach ($items as $listing) {
+                            $lines[] = sprintf(
+                                '- **%s** by %s — MVR %s (~USD %s) · ★ %s · %s',
+                                $listing->title,
+                                $listing->provider->business_name ?? 'Unknown provider',
+                                number_format((float) $listing->price_mvr, 0),
+                                number_format((float) $listing->price_usd, 2),
+                                number_format((float) $listing->rating, 1),
+                                $listing->lead_time_minutes > 0
+                                    ? "{$listing->lead_time_minutes}min lead time"
+                                    : 'instant',
+                            );
+                        }
+                    }
+
+                    $listingsBlock = "\n" . implode("\n", $lines);
+                }
+            }
+        }
+
+        return <<<PROMPT
+You are AfterArrival's local concierge — a warm, knowledgeable AI guide inside a Maldives in-stay services web app. Tourists open the app *after they arrive* on a local Maldivian island and use you to find food, laundry, souvenirs, and cultural experiences nearby. You're the kind of local friend a first-time visitor wishes they had.
+
+## About AfterArrival
+- A marketplace for things tourists need *during* their stay on inhabited Maldivian islands.
+- Payments via **BML Swipe** (the dominant Maldivian payment rail).
+- 16% Tourism GST (TGST) applies and is itemized on every receipt.
+- Categories on the platform: **Eat**, **Wash**, **Buy** (pickup only — no delivery), **Experience**.
+- Out of scope by design: accommodation/room booking, airport transfers, inter-island boats, resort-internal services.
+{$userBlock}{$listingsBlock}
+
+## How you respond
+- Warm, helpful, **concise** by default. 1–3 short paragraphs unless detailed advice is genuinely needed.
+- Use Markdown sparingly — bullet points and **bold** for prices and names work well.
+- Always cite prices in **both MVR and USD** (rough conversion: 1 USD ≈ 15.4 MVR).
+- Be opinionated when asked for a recommendation. Say what *you'd* do, not just options.
+- When discussing a price, say whether it's typical / above / below the local Maldives range, and give the rough range.
+- Use the user's first name occasionally when it fits naturally — never in every sentence.
+
+## Hard rules — never violate
+- **Never invent listings, providers, prices, or contact details.** If the user wants something that isn't in the live listings above, say so plainly and suggest they browse the relevant category tab.
+- **Refuse politely** for: alcohol, recreational drugs, adult services, nightlife, pork. These are illegal or unavailable on inhabited Maldivian islands and are not part of the platform.
+- **Defer to authority** for medical, legal, or emergency situations. Tell the user to contact: local clinic, police (119 in Maldives), their embassy, or a real professional. You are not a substitute.
+- **Stay in scope.** If asked about accommodation, transfers, or transport, briefly explain those aren't on AfterArrival and suggest Booking.com / Atoll Transfer / their guesthouse — then redirect to what you can help with.
+- **Don't make up Maldivian facts.** If unsure, say so.
+
+## Cultural context to weave in when relevant
+- Bikinis are fine on designated tourist beaches; modest dress (shoulders + knees covered) in village areas and when visiting a mosque.
+- During Ramadan, daytime restaurants on local islands often close until iftar — tourist-focused places usually stay open.
+- Tipping isn't expected but is appreciated — 10% for excursion crew is generous.
+- "Marhaba" (welcome) and "Shukuriyaa" (thank you) go a long way with locals.
+- Maldivian Rufiyaa (MVR) is the local currency; USD is widely accepted at tourist-facing shops, often at slightly worse rates.
+
+Now reply to the user.
+PROMPT;
+    }
+
+    /**
+     * Prepare the messages array for the Anthropic API, capping history length
+     * and ensuring user/assistant alternation.
+     */
+    protected function prepareMessages(array $history, string $latestUserMessage): array
+    {
+        $capped = array_slice($history, -self::HISTORY_CAP);
+
+        $messages = [];
+        $expected = 'user';
+        foreach ($capped as $msg) {
+            if (! isset($msg['role'], $msg['content'])) {
+                continue;
+            }
+            if ($msg['role'] !== $expected) {
+                continue;
+            }
+            $messages[] = ['role' => $msg['role'], 'content' => (string) $msg['content']];
+            $expected = $expected === 'user' ? 'assistant' : 'user';
+        }
+
+        // Anthropic requires the first message to be 'user' and the last
+        // message to be 'user' (so the assistant has something to respond to).
+        if (! empty($messages) && $messages[0]['role'] !== 'user') {
+            array_shift($messages);
+        }
+
+        $last = end($messages);
+        if ($last && $last['role'] === 'user') {
+            // The current user input is *new* — strip the duplicate so we don't
+            // send the same user turn twice.
+            $messages[count($messages) - 1] = ['role' => 'user', 'content' => $latestUserMessage];
+        } else {
+            $messages[] = ['role' => 'user', 'content' => $latestUserMessage];
+        }
+
+        return $messages;
     }
 
     protected function mockReply(string $message, ?User $user): array
     {
         if ($this->matchesAny($message, ['hi', 'hello', 'hey', 'marhaba', 'salaam'])) {
             $name = $user?->name ? ', '.explode(' ', $user->name)[0] : '';
+
             return $this->response(
                 "Marhaba{$name}! I'm AfterArrival's local concierge. Ask me about food, laundry, souvenirs, or experiences on your island — I'll find what's nearby and tell you what's a fair price.",
             );
@@ -54,49 +281,15 @@ class AIAgentService
                 ->get();
 
             if ($listings->isEmpty()) {
-                return $this->response("I don't have food listings cached for your island yet. Try opening the Eat tab — anything live there is on my radar.");
+                return $this->response("I don't have food listings cached for your island yet. Try opening the Eat tab.");
             }
 
             $bullets = $listings->map(fn ($l) => sprintf('• %s — MVR %s', $l->title, $l->price_mvr))->implode("\n");
 
-            return $this->response("Here are a few well-rated food options near you:\n\n{$bullets}\n\nWant me to pull more details on any of these?");
+            return $this->response("Here are a few well-rated food options:\n\n{$bullets}\n\nWant more details on any of these?");
         }
 
-        if ($this->matchesAny($message, ['laundry', 'wash', 'clean'])) {
-            return $this->response("Laundry on the pilot island typically runs MVR 50-80 per kg, with same-day turnaround for orders placed before 10am. Open the Wash tab to see who's available now and their lead time.");
-        }
-
-        if ($this->matchesAny($message, ['snorkel', 'dive', 'fishing', 'experience', 'tour'])) {
-            return $this->response("Experiences on local islands are usually MVR 400-1500 depending on duration and gear. Browse the Experience tab — I can also answer 'is this a fair price' once you've picked a listing.");
-        }
-
-        if ($this->matchesAny($message, ['mvr', 'usd', 'currency', 'exchange', 'rate', 'fair price'])) {
-            return $this->response("All prices show in both MVR and USD using the Central Bank of Maldives reference rate (refreshed daily). When you check out, I'll flag if paying in MVR vs USD card would save you anything — usually it does, by 3-5%.");
-        }
-
-        if ($this->matchesAny($message, ['tgst', 'tax', 'gst'])) {
-            return $this->response("Tourism GST (TGST) is 16% on tourism services in the Maldives. Every receipt on AfterArrival itemizes it separately so you see the base price + the tax. No hidden fees.");
-        }
-
-        if ($this->matchesAny($message, ['mosque', 'bikini', 'beach', 'wear', 'ramadan', 'culture'])) {
-            return $this->response("Quick local etiquette: bikinis are fine on designated tourist beaches but not in village areas. Modest dress when visiting a mosque (covered shoulders + knees). During Ramadan, daytime restaurants on local islands close until sunset — but tourist-facing places usually stay open.");
-        }
-
-        if ($this->matchesAny($message, ['budget', 'spend', 'spent', 'cost'])) {
-            return $this->response("Your trip budget tracker is in your profile. I can give you a running total or help you find the cheapest options in any category. What's your remaining budget?");
-        }
-
-        return $this->response("I can help with food, laundry, souvenirs, experiences, currency questions, TGST, cultural etiquette, and pricing fairness on AfterArrival listings. What are you looking for?");
-    }
-
-    protected function liveReply(string $message, ?User $user): array
-    {
-        // TODO: implement Anthropic SDK call with tool use:
-        //   - search_listings(category, island_id)
-        //   - get_benchmark_price(category, island_id)
-        //   - get_budget_state(user_id)
-        // For now, fall back to mock so the demo doesn't break in live mode.
-        return $this->mockReply(strtolower($message), $user);
+        return $this->response("I can help with food, laundry, souvenirs, experiences, currency questions, TGST, cultural etiquette, and pricing fairness. What are you looking for?");
     }
 
     protected function matchesAny(string $haystack, array $needles): bool
@@ -106,6 +299,7 @@ class AIAgentService
                 return true;
             }
         }
+
         return false;
     }
 
