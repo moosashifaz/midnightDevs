@@ -4,8 +4,22 @@
 $url = $href ?? route('listing', $listing);
 @endphp
 
-<a href="{{ $url }}" class="card-interactive group block overflow-hidden">
-    <x-listing-image :listing="$listing" class="aspect-[16/10]" />
+<div class="card-interactive group relative overflow-hidden">
+    <a href="{{ $url }}" class="block">
+        <x-listing-image :listing="$listing" class="aspect-[16/10]" />
+    </a>
+
+    @auth
+        <button type="button"
+                onclick="Livewire.dispatch('ask-about-listing', { listingId: {{ $listing->id }} })"
+                title="Ask the concierge about this"
+                aria-label="Ask the concierge about {{ $listing->title }}"
+                class="absolute top-2.5 right-2.5 z-10 inline-flex items-center justify-center rounded-full bg-white/95 p-2 text-iru-700 shadow-card backdrop-blur transition-all duration-150 hover:scale-110 hover:bg-iru-100 hover:text-iru-800 focus:outline-none focus:ring-2 focus:ring-iru-400 focus:ring-offset-2">
+            <x-icons.icon name="ask-ai" class="h-4 w-4" />
+        </button>
+    @endauth
+
+    <a href="{{ $url }}" class="block">
     <div class="p-4">
         <div class="flex items-start justify-between gap-2 mb-1">
             <h3 class="font-semibold leading-tight text-muraka-900 group-hover:text-madi-700 transition-colors duration-150">{{ $listing->title }}</h3>
@@ -34,4 +48,5 @@ $url = $href ?? route('listing', $listing);
             @endif
         </div>
     </div>
-</a>
+    </a>
+</div>

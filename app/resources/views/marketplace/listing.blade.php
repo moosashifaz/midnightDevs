@@ -56,6 +56,17 @@
                         <x-ui.button variant="primary" :href="route('checkout', $listing)" class="w-full py-3 text-base">
                             {{ $listing->type === 'instant' ? 'Buy now' : 'Reserve & pay' }}
                         </x-ui.button>
+
+                        <button type="button"
+                                onclick="Livewire.dispatch('ask-about-listing', { listingId: {{ $listing->id }} })"
+                                class="group relative mt-3 w-full overflow-hidden rounded-xl bg-gradient-to-r from-iru-500 via-iru-400 to-dhooni-400 px-4 py-3 text-sm font-semibold text-muraka-900 shadow-card transition-all duration-200 hover:shadow-card-hover focus:outline-none focus:ring-2 focus:ring-iru-400 focus:ring-offset-2">
+                            <span class="absolute inset-0 bg-white/30 opacity-0 transition-opacity duration-200 group-hover:opacity-100"></span>
+                            <span aria-hidden="true" class="absolute -top-6 -right-6 h-16 w-16 rounded-full bg-white/20 blur-2xl"></span>
+                            <span class="relative flex items-center justify-center gap-2">
+                                <x-icons.icon name="ask-ai" class="h-5 w-5 text-muraka-900" />
+                                Ask the concierge about this
+                            </span>
+                        </button>
                     @else
                         <x-ui.button variant="primary" :href="route('login')" class="w-full py-3 text-base">Log in to book</x-ui.button>
                     @endauth

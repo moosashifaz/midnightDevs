@@ -2,7 +2,9 @@
 
 namespace App\Livewire;
 
+use App\Models\Listing;
 use App\Services\AIAgentService;
+use Livewire\Attributes\On;
 use Livewire\Component;
 
 class AIChat extends Component
@@ -98,6 +100,57 @@ class AIChat extends Component
     {
         $this->input = $prompt;
         $this->send();
+    }
+
+    /**
+     * Listener — when a tourist taps "Ask the concierge" on a listing or
+     * category page, this opens the chat and auto-sends a contextual
+     * question about the selected item.
+     *
+     * Fired from blade with:
+     *   Livewire.dispatch('ask-about-listing', { listingId: 42 })
+     */
+    #[On('ask-about-listing')]
+    public function askAboutListing(int $listingId): void
+    {
+        $listing = Listing::with('provider', 'island')->find($listingId);
+        if (! $listing) {
+            return;
+        }
+
+        $question = sprintf(
+            "Tell me about **%s** by %s — is the price (MVR %s ≈ USD %s) fair, and would you recommend it for someone on %s? What should I know before ordering?",
+            $listing->title,
+            $listing->provider->business_name ?? 'this provider',
+            number_format((float) $listing->price_mvr, 0),
+            number_format((float) $listing->price_usd, 2),
+            $listing->island->name ?? 'this island',
+        );
+
+        $this->open = true;
+        $this->lastError = null;
+        $this->messages[] = ['role' => 'user', 'content' => $question];
+        $this->isThinking = true;
+        session()->put('aichat_messages', $this->messages);
+        $this->dispatch('chat-scroll');
+    }
+
+    /**
+     * Listener for category-level asks (e.g. "What's good in Eat right now?").
+     */
+    #[On('ask-about-category')]
+    public function askAboutCategory(string $category): void
+    {
+        $label = Listing::CATEGORIES[$category] ?? ucfirst($category);
+
+        $question = "What would you recommend in the {$label} category right now? Pick your top 2-3 and tell me why.";
+
+        $this->open = true;
+        $this->lastError = null;
+        $this->messages[] = ['role' => 'user', 'content' => $question];
+        $this->isThinking = true;
+        session()->put('aichat_messages', $this->messages);
+        $this->dispatch('chat-scroll');
     }
 
     public function clearChat(): void
