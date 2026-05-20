@@ -436,7 +436,7 @@ flow, and exposes them through a chat interface.
   platform itself needs a tourism-services license.
 - **Ministry of Economic Development** — business registration.
 - **Data protection** — Maldives passed the Personal Data Protection Act in recent years;
-  confirm current status and obligations. **[DECIDE]**
+  confirm current status and obligations. Must confirm to GDPR as many European tourists will use it. **[DECIDE]**
 - **AML/KYC** — provider onboarding KYC; tourist KYC likely not required for low-value
   transactions, but card-processor rules may impose limits.
 
