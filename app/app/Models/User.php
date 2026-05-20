@@ -53,6 +53,11 @@ class User extends Authenticatable
         return $this->hasMany(Review::class);
     }
 
+    public function savedPlans(): HasMany
+    {
+        return $this->hasMany(SavedPlan::class);
+    }
+
     public function isTourist(): bool
     {
         return $this->role === self::ROLE_TOURIST;

@@ -3,6 +3,7 @@
     'title' => '',
     'items' => [],
     'showBook' => false,
+    'showAsk' => false,
     'compact' => false,
     'timeline' => false,
 ])
@@ -27,6 +28,7 @@
                         :listing="$item['listing'] ?? []"
                         :note="$item['note'] ?? null"
                         :show-book="$showBook"
+                        :show-ask="$showAsk"
                         :compact="$compact"
                     />
                 @endforeach

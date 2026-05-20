@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use App\Services\AIAgentService;
 use App\Services\AIPlannerService;
+use App\Services\Anthropic\Client as AnthropicClient;
 use App\Services\SamplePlanService;
 use App\Services\SwipeService;
 use Illuminate\Support\ServiceProvider;
@@ -23,26 +24,28 @@ class AppServiceProvider extends ServiceProvider
             );
         });
 
-        $this->app->singleton(AIAgentService::class, function ($app) {
+        $this->app->singleton(AnthropicClient::class, function ($app) {
             $config = $app['config']['services.anthropic'];
 
-            return new AIAgentService(
+            return new AnthropicClient(
                 apiKey: $config['api_key'],
                 model: $config['model'],
                 mock: (bool) $config['mock'],
             );
         });
 
+        $this->app->singleton(AIAgentService::class, function ($app) {
+            return new AIAgentService(
+                client: $app->make(AnthropicClient::class),
+            );
+        });
+
         $this->app->singleton(SamplePlanService::class);
 
         $this->app->singleton(AIPlannerService::class, function ($app) {
-            $config = $app['config']['services.anthropic'];
-
             return new AIPlannerService(
                 samplePlans: $app->make(SamplePlanService::class),
-                apiKey: $config['api_key'],
-                model: $config['model'],
-                mock: (bool) $config['mock'],
+                client: $app->make(AnthropicClient::class),
             );
         });
     }

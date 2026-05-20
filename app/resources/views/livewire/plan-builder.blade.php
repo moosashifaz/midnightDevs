@@ -63,10 +63,20 @@
                             </span>
                             <span wire:loading wire:target="generate">Generating…</span>
                         </button>
+                        @if($hasPlan)
+                            <button type="button" wire:click="savePlan" class="btn-ghost" wire:loading.attr="disabled" wire:target="savePlan" @disabled($isGenerating)>
+                                <span wire:loading.remove wire:target="savePlan">Save plan</span>
+                                <span wire:loading wire:target="savePlan">Saving…</span>
+                            </button>
+                        @endif
                     @else
                         <a href="{{ route('login') }}" class="btn-primary">Log in to generate your plan</a>
                     @endauth
                 </div>
+
+                @if(session('status'))
+                    <p class="text-sm text-madi-700 font-medium">{{ session('status') }}</p>
+                @endif
 
                 @if($error)
                     <p class="text-sm text-red-600">{{ $error }}</p>
@@ -119,6 +129,7 @@
                         :title="$dayBlock['title']"
                         :items="$dayBlock['items']"
                         :show-book="auth()->check()"
+                        :show-ask="auth()->check()"
                         timeline
                     />
                 @endforeach

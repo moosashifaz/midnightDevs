@@ -3,6 +3,7 @@
 namespace App\Livewire;
 
 use App\Models\Island;
+use App\Models\SavedPlan;
 use App\Services\AIPlannerService;
 use App\Services\Planner\PlanResult;
 use Illuminate\Http\Request;
@@ -64,6 +65,27 @@ class PlanBuilder extends Component
 
         $this->autoGenerate = false;
         $this->generate($request, $planner);
+    }
+
+    public function savePlan(Request $request): void
+    {
+        if (! $request->user() || ! $this->hasPlan) {
+            return;
+        }
+
+        $island = $this->resolveIsland($request);
+
+        SavedPlan::create([
+            'user_id' => $request->user()->id,
+            'island_id' => $island?->id,
+            'budget_usd' => $this->budgetUsd,
+            'days' => $this->days,
+            'spent_usd' => $this->spentUsd,
+            'summary' => $this->summary,
+            'plan_data' => $this->planDays,
+        ]);
+
+        session()->flash('status', 'Plan saved to My plans.');
     }
 
     public function generate(Request $request, AIPlannerService $planner): void

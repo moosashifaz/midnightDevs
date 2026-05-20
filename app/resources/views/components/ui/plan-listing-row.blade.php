@@ -2,10 +2,12 @@
     'listing' => [],
     'note' => null,
     'showBook' => false,
+    'showAsk' => false,
     'compact' => false,
 ])
 
 @php
+    $listingId = $listing['id'] ?? null;
     $slug = $listing['slug'] ?? '';
     $title = $listing['title'] ?? 'Listing';
     $imageUrl = $listing['image_url'] ?? null;
@@ -44,7 +46,22 @@
         </div>
     </div>
 
-    @if($checkoutUrl)
-        <a href="{{ $checkoutUrl }}" class="btn-secondary shrink-0 text-xs px-3 py-2">Book</a>
-    @endif
+    <div class="flex shrink-0 flex-col gap-1.5 sm:flex-row sm:items-center">
+        @if($showAsk && $listingId)
+            @auth
+                <button
+                    type="button"
+                    onclick="Livewire.dispatch('ask-about-listing', { listingId: {{ $listingId }} })"
+                    title="Ask the concierge about this"
+                    aria-label="Ask the concierge about {{ $title }}"
+                    class="inline-flex items-center justify-center rounded-full bg-white border border-moodhu-200 p-2 text-iru-700 shadow-sm transition-all duration-150 hover:border-madi-300 hover:bg-iru-50 hover:text-iru-800 focus:outline-none focus:ring-2 focus:ring-madi-400 focus:ring-offset-2"
+                >
+                    <x-icons.icon name="ask-ai" class="h-4 w-4" />
+                </button>
+            @endauth
+        @endif
+        @if($checkoutUrl)
+            <a href="{{ $checkoutUrl }}" class="btn-secondary text-xs px-3 py-2 text-center">Book</a>
+        @endif
+    </div>
 </div>

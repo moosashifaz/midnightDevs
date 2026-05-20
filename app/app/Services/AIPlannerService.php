@@ -5,20 +5,15 @@ namespace App\Services;
 use App\Models\Island;
 use App\Models\Listing;
 use App\Models\User;
+use App\Services\Anthropic\Client;
 use App\Services\Planner\PlanResult;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
 class AIPlannerService
 {
-    public const ANTHROPIC_ENDPOINT = 'https://api.anthropic.com/v1/messages';
-    public const ANTHROPIC_VERSION = '2023-06-01';
-
     public function __construct(
         protected SamplePlanService $samplePlans,
-        protected ?string $apiKey,
-        protected string $model,
-        protected bool $mock = true,
+        protected Client $client,
     ) {
     }
 
@@ -31,7 +26,7 @@ class AIPlannerService
             return $this->samplePlans->forIsland(null, $budgetUsd, $days);
         }
 
-        if ($this->mock || ! $this->apiKey) {
+        if (! $this->client->isAvailable()) {
             return $this->samplePlans->forIsland($island, $budgetUsd, $days);
         }
 
@@ -103,35 +98,16 @@ Listings:
 Return the JSON plan now.
 MSG;
 
-        $response = Http::withHeaders([
-            'x-api-key' => $this->apiKey,
-            'anthropic-version' => self::ANTHROPIC_VERSION,
-            'content-type' => 'application/json',
-        ])
-            ->timeout(90)
-            ->retry(2, 250, throw: false)
-            ->post(self::ANTHROPIC_ENDPOINT, [
-                'model' => $this->model,
-                'max_tokens' => 2048,
-                'system' => $system,
-                'messages' => [
-                    ['role' => 'user', 'content' => $userMessage],
-                ],
-            ]);
+        $text = $this->client->messages(
+            $system,
+            [['role' => 'user', 'content' => $userMessage]],
+            maxTokens: 2048,
+            timeoutSeconds: 90,
+        );
 
-        if ($response->failed()) {
-            Log::error('ai.planner.api_failed', [
-                'status' => $response->status(),
-                'body' => $response->body(),
-            ]);
-
+        if ($text === null) {
             return null;
         }
-
-        $text = collect($response->json('content', []))
-            ->where('type', 'text')
-            ->pluck('text')
-            ->implode('');
 
         return $this->parseJsonPayload($text);
     }

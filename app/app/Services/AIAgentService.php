@@ -4,51 +4,29 @@ namespace App\Services;
 
 use App\Models\Listing;
 use App\Models\User;
-use Illuminate\Support\Facades\Http;
+use App\Services\Anthropic\Client;
 use Illuminate\Support\Facades\Log;
 
 /**
  * AfterArrival's AI Concierge — Anthropic Messages API.
- *
- * Dynamic, modern conversation: the system prompt is built per-request from
- * the user's trip context + a fresh snapshot of available listings on their
- * island. The agent answers as a warm Maldivian-friendly local guide, never
- * inventing inventory, citing prices in MVR + USD, and refusing categories
- * that are out of scope or illegal on inhabited islands.
- *
- * Set ANTHROPIC_MOCK=true in .env to fall back to deterministic keyword
- * routing for offline demos.
  */
 class AIAgentService
 {
-    public const ANTHROPIC_ENDPOINT = 'https://api.anthropic.com/v1/messages';
-    public const ANTHROPIC_VERSION = '2023-06-01';
-
-    /**
-     * Maximum number of past turns to send with each request — keeps
-     * context cost bounded while preserving recent conversation memory.
-     */
     public const HISTORY_CAP = 20;
 
     public function __construct(
-        protected ?string $apiKey,
-        protected string $model,
-        protected bool $mock = true,
+        protected Client $client,
     ) {
     }
 
     /**
-     * Get a reply for the user's most recent message.
-     *
      * @param  array<int, array{role: string, content: string}>  $history
-     *   Prior conversation turns (user/assistant). The latest user message
-     *   should be passed separately as $message.
      */
     public function reply(string $message, ?User $user = null, array $history = []): array
     {
         $message = trim($message);
 
-        if ($this->mock || ! $this->apiKey) {
+        if (! $this->client->isAvailable()) {
             return $this->mockReply(strtolower($message), $user);
         }
 
@@ -67,61 +45,29 @@ class AIAgentService
     }
 
     /**
-     * Real Anthropic Messages API call.
+     * @param  array<int, array{role: string, content: string}>  $history
      */
     protected function liveReply(string $message, ?User $user, array $history): array
     {
         $system = $this->buildSystemPrompt($user);
         $messages = $this->prepareMessages($history, $message);
 
-        $response = Http::withHeaders([
-            'x-api-key' => $this->apiKey,
-            'anthropic-version' => self::ANTHROPIC_VERSION,
-            'content-type' => 'application/json',
-        ])
-            ->timeout(60)
-            ->retry(2, 250, throw: false)
-            ->post(self::ANTHROPIC_ENDPOINT, [
-                'model' => $this->model,
-                'max_tokens' => 1024,
-                'system' => $system,
-                'messages' => $messages,
-            ]);
+        $text = $this->client->messages($system, $messages, maxTokens: 1024);
 
-        if ($response->failed()) {
-            Log::error('anthropic.api.failed', [
-                'status' => $response->status(),
-                'body' => $response->body(),
-            ]);
-
+        if ($text === null) {
             return $this->response(
                 "I'm having trouble reaching the concierge brain. Try again in a moment, or browse the categories directly."
             );
         }
 
-        $data = $response->json();
-
-        $text = collect($data['content'] ?? [])
-            ->where('type', 'text')
-            ->pluck('text')
-            ->implode('');
-
-        if ($text === '') {
-            return $this->response("I'm not sure how to help with that — try asking about food, laundry, souvenirs, experiences, or prices on the island.");
-        }
-
         return [
             'role' => 'assistant',
             'content' => $text,
-            'model' => $data['model'] ?? $this->model,
-            'usage' => $data['usage'] ?? null,
+            'model' => $this->client->model(),
             'timestamp' => now()->toIso8601String(),
         ];
     }
 
-    /**
-     * Build the dynamic system prompt with user context + live listings.
-     */
     protected function buildSystemPrompt(?User $user): string
     {
         $userBlock = '';
@@ -148,7 +94,7 @@ class AIAgentService
                 }
             }
             $userLines[] = "- Currency preference: {$user->currency_preference}";
-            $userBlock = "\n\n" . implode("\n", $userLines);
+            $userBlock = "\n\n".implode("\n", $userLines);
 
             if ($island) {
                 $listings = Listing::with('provider')
@@ -160,7 +106,7 @@ class AIAgentService
 
                 if ($listings->isNotEmpty()) {
                     $lines = ["\n## Live listings on {$island->name} right now",
-                        "(use ONLY these when recommending — do not invent others)"];
+                        '(use ONLY these when recommending — do not invent others)'];
 
                     foreach ($listings->groupBy('category') as $cat => $items) {
                         $catLabel = Listing::CATEGORIES[$cat] ?? ucfirst((string) $cat);
@@ -180,7 +126,7 @@ class AIAgentService
                         }
                     }
 
-                    $listingsBlock = "\n" . implode("\n", $lines);
+                    $listingsBlock = "\n".implode("\n", $lines);
                 }
             }
         }
@@ -223,8 +169,8 @@ PROMPT;
     }
 
     /**
-     * Prepare the messages array for the Anthropic API, capping history length
-     * and ensuring user/assistant alternation.
+     * @param  array<int, array{role: string, content: string}>  $history
+     * @return array<int, array{role: string, content: string}>
      */
     protected function prepareMessages(array $history, string $latestUserMessage): array
     {
@@ -243,16 +189,12 @@ PROMPT;
             $expected = $expected === 'user' ? 'assistant' : 'user';
         }
 
-        // Anthropic requires the first message to be 'user' and the last
-        // message to be 'user' (so the assistant has something to respond to).
         if (! empty($messages) && $messages[0]['role'] !== 'user') {
             array_shift($messages);
         }
 
         $last = end($messages);
         if ($last && $last['role'] === 'user') {
-            // The current user input is *new* — strip the duplicate so we don't
-            // send the same user turn twice.
             $messages[count($messages) - 1] = ['role' => 'user', 'content' => $latestUserMessage];
         } else {
             $messages[] = ['role' => 'user', 'content' => $latestUserMessage];
@@ -308,7 +250,7 @@ PROMPT;
         return [
             'role' => 'assistant',
             'content' => $text,
-            'model' => $this->mock ? 'mock' : $this->model,
+            'model' => $this->client->isAvailable() ? $this->client->model() : 'mock',
             'timestamp' => now()->toIso8601String(),
         ];
     }
