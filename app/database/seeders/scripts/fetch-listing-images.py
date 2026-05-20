@@ -18,10 +18,10 @@ MAP = {
         # eat: custom local photo (from traditional-maldivian-dinner)
         # wash: custom local laundry photo
         # buy: custom local photo from lacquered-wooden-bowl asset
-        "experience": "photo-1558618666-fcd25c85cd64",
+        # experience: custom local photo (from snorkel-with-sea-turtles)
     },
     "listings": {
-        "maldivian-tuna-curry-set": "photo-1559339352-11d035aa65de",
+        # maldivian-tuna-curry-set: custom local photo
         # fresh-lobster-per-100g: custom local photo
         "sunset-smoothie-bowl": "photo-1590301157890-4810ed352733",
         # traditional-maldivian-dinner: custom local photo
@@ -33,7 +33,7 @@ MAP = {
         # snorkel-with-sea-turtles: custom local photo
         # sunset-dolphin-cruise: custom local photo
         "sandbank-picnic": "photo-1507525428034-b723cf961d3e",
-        "cooking-class-traditional-maldivian-curry": "photo-1556910103-1c02745aae4d",
+        # cooking-class-traditional-maldivian-curry: custom local photo
         "dhivehi-language-taster": "photo-1523240795612-9a054b0db644",
         # island-walking-tour: custom local photo
     },
@@ -62,7 +62,7 @@ def main() -> None:
 
     print("Categories:")
     for key, photo in MAP["categories"].items():
-        if key in ("buy", "wash", "eat"):
+        if key in ("buy", "wash", "eat", "experience"):
             print(f"  skip {key}.webp (custom asset)")
             continue
         download(photo, PUBLIC / "categories" / f"{key}.webp", 900, 560)
@@ -79,6 +79,8 @@ def main() -> None:
             "bajiya-hedhikaa-box",
             "fresh-lobster-per-100g",
             "snorkel-with-sea-turtles",
+            "maldivian-tuna-curry-set",
+            "cooking-class-traditional-maldivian-curry",
             "standard-laundry-per-kg",
             "express-laundry-per-kg",
             "delicate-hand-wash-per-item",

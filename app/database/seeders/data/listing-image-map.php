@@ -9,10 +9,10 @@ return [
         'eat' => null, // custom: public/images/categories/eat.webp
         'wash' => null, // custom: public/images/categories/wash.webp
         'buy' => null, // custom: public/images/categories/buy.webp
-        'experience' => 'photo-1558618666-fcd25c85cd64',
+        'experience' => null, // custom: public/images/categories/experience.webp
     ],
     'listings' => [
-        'maldivian-tuna-curry-set' => 'photo-1559339352-11d035aa65de',
+        'maldivian-tuna-curry-set' => null, // custom: public/images/listings/maldivian-tuna-curry-set.webp
         'fresh-lobster-per-100g' => null, // custom: public/images/listings/fresh-lobster-per-100g.webp
         'sunset-smoothie-bowl' => 'photo-1590301157890-4810ed352733',
         'traditional-maldivian-dinner' => null, // custom: public/images/listings/traditional-maldivian-dinner.webp
@@ -26,7 +26,7 @@ return [
         'snorkel-with-sea-turtles' => null, // custom: public/images/listings/snorkel-with-sea-turtles.webp
         'sunset-dolphin-cruise' => null, // custom: public/images/listings/sunset-dolphin-cruise.webp
         'sandbank-picnic' => 'photo-1507525428034-b723cf961d3e',
-        'cooking-class-traditional-maldivian-curry' => 'photo-1556910103-1c02745aae4d',
+        'cooking-class-traditional-maldivian-curry' => null, // custom: public/images/listings/cooking-class-traditional-maldivian-curry.webp
         'dhivehi-language-taster' => 'photo-1523240795612-9a054b0db644',
         'island-walking-tour' => null, // custom: public/images/listings/island-walking-tour.webp
     ],
