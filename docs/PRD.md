@@ -2,7 +2,7 @@
 
 *Maldives in-stay services marketplace*
 
-**Status:** Draft v0.7
+**Status:** Draft v0.8
 **Owner:** @moosashifaz
 **Last updated:** 2026-05-20
 
@@ -292,7 +292,12 @@ low-AOV (laundry, food under ~MVR 200), and 15% for experiences/excursions.
   be handled either by reversing from platform float or by an out-of-band BML process.
   This needs confirmation with BML before launch.
 
-### 9.6 Loyalty & rewards — "Pearls"
+### 9.6 Loyalty & rewards — "Pearls" *(upcoming feature, post-MVP)*
+
+> **Status — not in v1.** This section captures the loyalty design so the team
+> doesn't reinvent it later, but the program **does not ship in MVP**. Re-scoped
+> into a post-launch release once base marketplace behavior, take-rate, and
+> repeat-booking baselines are observable.
 
 Tourist visitors to the Maldives present an unusual loyalty design challenge:
 most are **one-trip-in-a-lifetime** visitors. The program is therefore optimized
@@ -325,21 +330,21 @@ for **in-trip frequency** first, **returning-visitor benefits** second, and
 - **Provider-payout-neutral** — supply-side economics are shielded from loyalty
   spend.
 
-#### 9.6.3 Phased rollout
+#### 9.6.3 Phased rollout (post-MVP)
 
-**v1 (MVP)**
+**Phase 1 — first loyalty release**
 - Flat 5% Pearls earned on every booking, in-trip redemption.
 - Balance visible in profile, checkout, budget tracker, and AI-agent responses.
 - Expiry at trip end + 30 days.
 
-**v2**
+**Phase 2**
 - **Tier system** — Bronze (5%, default) / Silver (8%, trip spend > $200) /
   Gold (12%, > $500). Tier unlocks within the current trip.
 - **Reviews-as-Pearls** — verified review earns small credit; photo review more.
 - **Referral program** — tourist invites a friend; both get $10 in Pearls when
   the friend completes their first booking.
 
-**v3**
+**Phase 3**
 - **"Welcome Back"** — returning tourists within 24 months arrive with their
   previous tier reinstated + a small welcome credit.
 - **Streak / completion rewards** — book one service in each category and unlock
@@ -618,8 +623,6 @@ flow, and exposes them through a chat interface.
 - AI Agent v1: English text chat, read-only Q&A (catalogue search, financial, cultural,
   logistical), `search_listings` + `get_benchmark_price` tools, "talk to a human" CTA
   (see §11.6)
-- Loyalty v1: flat 5% Pearls cashback on every booking, in-trip auto-redeem, balance
-  visible in profile + checkout + budget tracker (see §9.6.3)
 - Admin console: verification + dispute + payouts
 - 1–2 pilot islands **[DECIDE: which]** — recommend Maafushi (highest guesthouse density)
   and possibly Thulusdhoo or Ukulhas
@@ -700,7 +703,7 @@ services layer and avoid head-on competition with entrenched players.
 - Souvenir *delivery* (v1 is pickup-only)
 - Multi-listing cart
 - Provider-set custom cancellation policies
-- Loyalty / referral programs
+- Loyalty / referral programs (Pearls — design captured in §9.6)
 - Multi-language beyond English + Dhivehi
 
 ## 19. Open decisions blocking detailed planning
@@ -737,11 +740,10 @@ services layer and avoid head-on competition with entrenched players.
     though we don't *book* those. Should it? If yes, do we link out to
     Booking.com / Atoll Transfer, or stay neutral?
 16. **Loyalty currency name** — "Pearls" (Maldives is the Pearl of the Indian
-    Ocean), AfterArrival Credits, Sands, Tides? See §9.6.6.
-17. **Loyalty cashback rate** — 5% v1 placeholder needs modeling against
-    category take-rate; rate may vary by category once analytics land.
-18. **Referral program in v1 or v2?** Cheap to build, strong acquisition lever
-    with no accommodation funnel (see §17 risks).
+    Ocean), AfterArrival Credits, Sands, Tides? See §9.6.6. *Deferred to
+    post-MVP planning.*
+17. **Loyalty cashback rate** — 5% placeholder needs modeling against category
+    take-rate; rate may vary by category. *Deferred to post-MVP planning.*
 
 ---
 
