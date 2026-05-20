@@ -74,7 +74,7 @@
     }
 
     .page-wrap {
-        @apply w-full px-6 sm:px-10 lg:px-16 py-6;
+        @apply w-full px-6 sm:px-10 lg:px-16 py-6 max-w-7xl mx-auto;
     }
 
     [x-cloak] {
