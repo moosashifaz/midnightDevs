@@ -62,6 +62,7 @@ class MarketplaceController extends Controller
         return view('marketplace.category', [
             'category' => $category,
             'label' => Listing::CATEGORIES[$category],
+            'description' => Listing::CATEGORY_SUBLABELS[$category] ?? null,
             'island' => $island,
             'listings' => $listings,
         ]);

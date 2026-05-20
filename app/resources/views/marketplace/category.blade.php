@@ -1,17 +1,14 @@
 <x-marketplace-layout>
-    <div class="page-wrap">
-    <div class="relative rounded-2xl overflow-hidden mb-6 h-36 sm:h-44">
-        <img
-            src="/images/categories/{{ $category }}.webp"
-            alt="{{ $label }}"
-            class="absolute inset-0 h-full w-full object-cover"
-            loading="lazy"
-        />
-        <div class="absolute inset-0 bg-gradient-to-r from-muraka-900/70 to-muraka-900/30"></div>
-        <div class="relative h-full flex flex-col justify-end p-5 text-white">
-            <p class="text-xs font-semibold uppercase tracking-label text-moodhu-200">{{ $island?->name ?? 'All islands' }}</p>
-            <h1 class="text-2xl sm:text-3xl font-bold text-white">{{ $label }}</h1>
-            <p class="text-sm text-moodhu-100 mt-0.5">{{ $listings->total() }} {{ Str::plural('listing', $listings->total()) }}</p>
+    <div class="page-wrap max-w-7xl mx-auto">
+    <div class="mb-6 py-6">
+        <div class="space-y-3">
+            <div class="text-sm uppercase tracking-[0.24em] text-madi-700 font-semibold">{{ $listings->total() }} {{ Str::plural('listing', $listings->total()) }}</div>
+            <div class="flex items-center gap-4">
+            <div class="text-3xl sm:text-4xl font-bold text-muraka-900">{{ $label }}</div>
+            @if($description)
+                <p class="text-sm text-muraka-600 max-w-2xl border-l-4 border-muraka-500 pl-4 py-3">{{ $description }}</p>
+            @endif
+            </div>
         </div>
     </div>
 
@@ -20,7 +17,7 @@
             Nothing here yet. Try another category or island.
         </x-ui.card>
     @else
-        <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div class="grid sm:grid-cols-4 lg:grid-cols-4 gap-4">
             @foreach($listings as $listing)
                 <x-ui.listing-card :listing="$listing">
                     <p class="text-xs text-muraka-600 line-clamp-2 mb-2">{{ $listing->description }}</p>
