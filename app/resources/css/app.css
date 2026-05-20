@@ -1,3 +1,90 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+    html {
+        color-scheme: light;
+    }
+
+    body {
+        @apply bg-moodhu-50 text-muraka-900 antialiased;
+    }
+
+    h1, h2, h3, h4 {
+        @apply text-muraka-900;
+    }
+}
+
+@layer components {
+    .section-eyebrow {
+        @apply text-xs font-semibold uppercase tracking-label text-madi-600;
+    }
+
+    .section-title {
+        @apply text-xl font-bold text-muraka-900 sm:text-2xl;
+    }
+
+    .btn-primary {
+        @apply inline-flex items-center justify-center rounded-xl bg-iru-500 px-4 py-2.5 text-sm font-semibold text-muraka-900 shadow-sm transition-colors duration-150 hover:bg-iru-600 focus:outline-none focus:ring-2 focus:ring-madi-400 focus:ring-offset-2 disabled:opacity-50;
+    }
+
+    .btn-secondary {
+        @apply inline-flex items-center justify-center rounded-xl bg-madi-500 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors duration-150 hover:bg-madi-600 focus:outline-none focus:ring-2 focus:ring-madi-400 focus:ring-offset-2 disabled:opacity-50;
+    }
+
+    .btn-ghost {
+        @apply inline-flex items-center justify-center rounded-xl px-4 py-2.5 text-sm font-medium text-miyaru-700 transition-colors duration-150 hover:bg-moodhu-100 hover:text-madi-700 focus:outline-none focus:ring-2 focus:ring-madi-300 focus:ring-offset-2;
+    }
+
+    .card {
+        @apply rounded-2xl border border-moodhu-200 bg-white shadow-card;
+    }
+
+    .card-interactive {
+        @apply card transition-shadow duration-200 hover:shadow-card-hover;
+    }
+
+    .badge {
+        @apply inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide;
+    }
+
+    .badge-instant {
+        @apply badge bg-ruh-100 text-ruh-800;
+    }
+
+    .badge-lead {
+        @apply badge bg-dhooni-100 text-dhooni-800;
+    }
+
+    .badge-verified {
+        @apply badge bg-madi-100 text-madi-800;
+    }
+
+    .input-field {
+        @apply block w-full rounded-xl border-moodhu-300 bg-white text-muraka-900 shadow-sm transition-colors duration-150 focus:border-madi-400 focus:ring-madi-400;
+    }
+
+    .nav-pill {
+        @apply rounded-full px-3 py-1.5 text-sm text-muraka-600 transition-colors duration-150 hover:bg-moodhu-100;
+    }
+
+    .nav-pill-active {
+        @apply nav-pill bg-moodhu-200 font-medium text-madi-700;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+
+    .card-interactive:hover {
+        transform: none !important;
+    }
+}

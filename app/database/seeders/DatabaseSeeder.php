@@ -121,8 +121,9 @@ class DatabaseSeeder extends Seeder
             );
 
             foreach ($data['listings'] as $listing) {
-                Listing::firstOrCreate(
-                    ['provider_id' => $provider->id, 'slug' => Str::slug($listing['title'])],
+                $slug = Str::slug($listing['title']);
+                Listing::updateOrCreate(
+                    ['provider_id' => $provider->id, 'slug' => $slug],
                     [
                         'island_id' => $maafushi->id,
                         'title' => $listing['title'],
@@ -131,6 +132,7 @@ class DatabaseSeeder extends Seeder
                         'description' => $listing['desc'],
                         'price_mvr' => $listing['price'],
                         'price_usd' => round($listing['price'] / 15.42, 2),
+                        'image_url' => '/images/listings/'.$slug.'.webp',
                         'is_active' => true,
                         'lead_time_minutes' => $listing['type'] === 'instant' ? 0 : ($listing['type'] === 'experience' ? 240 : 60),
                         'rating' => round(4 + (rand(0, 90) / 100), 2),
