@@ -21,6 +21,11 @@ class OrderController extends Controller
 
     public function store(Request $request, Listing $listing, SwipeService $swipe): RedirectResponse
     {
+        if (!auth()->check()) {
+            return redirect()->route('checkout', $listing)
+                ->with('error', 'Please authenticate to complete your purchase.');
+        }
+
         $request->validate([
             'special_requests' => ['nullable', 'string', 'max:500'],
             'scheduled_for' => ['nullable', 'date', 'after_or_equal:today'],

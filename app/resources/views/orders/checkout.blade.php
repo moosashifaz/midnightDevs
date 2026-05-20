@@ -5,7 +5,26 @@
     </a>
     <x-ui.page-header title="Checkout" class="mt-2" />
 
-    <div class="grid lg:grid-cols-5 gap-6">
+    @if(!auth()->check())
+        <div class="mb-6">
+            <x-ui.card class="p-6 bg-moodhu-50 border-madi-200">
+                <h2 class="font-semibold text-lg mb-4 flex items-center gap-2">
+                    <x-icons.icon name="user" class="w-5 h-5 text-madi-600" />
+                    Quick Authentication
+                </h2>
+                <p class="text-sm text-muraka-700 mb-4">Enter your email or phone number to continue. We'll send you a verification code to create your account or log you in.</p>
+                
+                @if(session('error'))
+                    <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4 text-sm">
+                        {{ session('error') }}
+                    </div>
+                @endif
+                
+                <livewire:otp-auth />
+            </x-ui.card>
+        </div>
+    @else
+        <div class="grid lg:grid-cols-5 gap-6">
         <form method="POST" action="{{ route('checkout.store', $listing) }}" class="lg:col-span-3 space-y-5">
             @csrf
 
@@ -77,5 +96,6 @@
             </x-ui.card>
         </aside>
     </div>
+    @endif
     </div>
 </x-marketplace-layout>

@@ -12,9 +12,10 @@ Route::get('/c/{category}', [MarketplaceController::class, 'category'])->name('c
 Route::get('/listing/{listing:slug}', [MarketplaceController::class, 'listing'])->name('listing');
 Route::post('/island/{island:slug}', [MarketplaceController::class, 'setIsland'])->name('island.set');
 
+Route::get('/checkout/{listing:slug}', [OrderController::class, 'checkout'])->name('checkout');
+Route::post('/checkout/{listing:slug}', [OrderController::class, 'store'])->name('checkout.store');
+
 Route::middleware(['auth'])->group(function () {
-    Route::get('/checkout/{listing:slug}', [OrderController::class, 'checkout'])->name('checkout');
-    Route::post('/checkout/{listing:slug}', [OrderController::class, 'store'])->name('checkout.store');
     Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
     Route::get('/orders/{order:reference}', [OrderController::class, 'show'])->name('orders.show');
 

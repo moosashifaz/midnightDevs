@@ -69,7 +69,9 @@
                             </span>
                         </button>
                     @else
-                        <x-ui.button variant="primary" :href="route('login')" class="w-full py-3 text-base">Log in to book</x-ui.button>
+                        <x-ui.button variant="primary" :href="route('checkout', $listing)" class="w-full py-3 text-base">
+                            {{ $listing->type === 'instant' ? 'Buy now' : 'Reserve & pay' }}
+                        </x-ui.button>
                     @endauth
                 </div>
 
