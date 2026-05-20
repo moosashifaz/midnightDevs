@@ -65,7 +65,7 @@ class AIPlannerService
             '- slug: %s | %s | %s | USD %.2f | MVR %s',
             $l->slug,
             $l->title,
-            $l->category,
+            $l->categoryLabel(),
             (float) $l->price_usd,
             number_format((float) $l->price_mvr, 0),
         ))->implode("\n");
@@ -83,7 +83,7 @@ Rules:
 - Use only slugs from the listing list. Never invent slugs.
 - Total USD of all items must not exceed {$budgetUsd}.
 - Exactly {$days} day objects, day numbers 1..{$days}.
-- Mix eat, wash, buy, experience across the trip (1-3 items per day).
+- Mix **Taste** (food), **Refresh** (laundry/wellness), **Shop** (pickup souvenirs), and **Explore** (experiences) across the trip (1-3 items per day).
 - Notes are short (e.g. "Dinner", "Morning snorkel").
 PROMPT;
 

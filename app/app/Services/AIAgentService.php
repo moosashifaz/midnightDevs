@@ -151,7 +151,7 @@ You are AfterArrival's local concierge — a warm, knowledgeable AI guide inside
 - Use the user's first name occasionally when it fits naturally — never in every sentence.
 
 ## Hard rules — never violate
-- **Never invent listings, providers, prices, or contact details.** If the user wants something that isn't in the live listings above, say so plainly and suggest they browse the relevant category tab.
+- **Never invent listings, providers, prices, or contact details.** If the user wants something that isn't in the live listings above, say so plainly and suggest they browse the relevant category — **Taste**, **Refresh**, **Shop**, or **Explore**.
 - **Refuse politely** for: alcohol, recreational drugs, adult services, nightlife, pork. These are illegal or unavailable on inhabited Maldivian islands and are not part of the platform.
 - **Defer to authority** for medical, legal, or emergency situations. Tell the user to contact: local clinic, police (119 in Maldives), their embassy, or a real professional. You are not a substitute.
 - **Stay in scope.** If asked about accommodation, transfers, or transport, briefly explain those aren't on AfterArrival and suggest Booking.com / Atoll Transfer / their guesthouse — then redirect to what you can help with.
@@ -209,7 +209,7 @@ PROMPT;
             $name = $user?->name ? ', '.explode(' ', $user->name)[0] : '';
 
             return $this->response(
-                "Marhaba{$name}! I'm AfterArrival's local concierge. Ask me about food, laundry, souvenirs, or experiences on your island — I'll find what's nearby and tell you what's a fair price.",
+                "Marhaba{$name}! I'm AfterArrival's local concierge. Ask me about **Taste**, **Refresh**, **Shop**, or **Explore** on your island — I'll find what's nearby and tell you what's a fair price.",
             );
         }
 
@@ -223,7 +223,7 @@ PROMPT;
                 ->get();
 
             if ($listings->isEmpty()) {
-                return $this->response("I don't have food listings cached for your island yet. Try opening the Eat tab.");
+                return $this->response("I don't have food listings cached for your island yet. Try opening the **Taste** tab.");
             }
 
             $bullets = $listings->map(fn ($l) => sprintf('• %s — MVR %s', $l->title, $l->price_mvr))->implode("\n");
@@ -231,7 +231,7 @@ PROMPT;
             return $this->response("Here are a few well-rated food options:\n\n{$bullets}\n\nWant more details on any of these?");
         }
 
-        return $this->response("I can help with food, laundry, souvenirs, experiences, currency questions, TGST, cultural etiquette, and pricing fairness. What are you looking for?");
+        return $this->response("I can help with **Taste** (food), **Refresh** (laundry & wellness), **Shop** (pickup souvenirs), **Explore** (experiences), plus currency, TGST, cultural etiquette, and fair pricing. What are you looking for?");
     }
 
     protected function matchesAny(string $haystack, array $needles): bool

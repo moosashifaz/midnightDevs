@@ -169,7 +169,7 @@ class AIChat extends Component
     }
 
     /**
-     * Listener for category-level asks (e.g. "What's good in Eat right now?").
+     * Listener for category-level asks (e.g. "What's good in Taste right now?").
      */
     #[On('ask-about-category')]
     public function askAboutCategory(string $category): void

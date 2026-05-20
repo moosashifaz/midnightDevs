@@ -3,7 +3,7 @@
     <section class="relative w-full min-h-[420px] sm:min-h-[520px] lg:min-h-[640px] overflow-hidden" aria-label="Welcome banner">
         {{-- Poster fallback for reduced motion and while video loads --}}
         <img
-            src="/images/categories/experience.webp"
+            src="/images/hero-maafushi-poster.jpg"
             alt=""
             aria-hidden="true"
             class="hero-video-fallback hero-media absolute inset-0 h-full w-full object-cover"
@@ -15,7 +15,7 @@
             muted
             loop
             playsinline
-            poster="/images/listings/snorkel-with-sea-turtles.webp"
+            poster="/images/hero-maafushi-poster.jpg"
             aria-hidden="true"
         >
             @php
