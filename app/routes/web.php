@@ -19,14 +19,11 @@ Route::get('/checkout/{listing:slug}', [OrderController::class, 'checkout'])->na
 Route::post('/checkout/{listing:slug}', [OrderController::class, 'store'])->name('checkout.store');
 
 Route::middleware(['auth'])->group(function () {
-<<<<<<< HEAD
-=======
     Route::get('/plans', [SavedPlanController::class, 'index'])->name('plans.index');
     Route::get('/plans/{savedPlan}', [SavedPlanController::class, 'show'])->name('plans.show');
 
     Route::get('/checkout/{listing:slug}', [OrderController::class, 'checkout'])->name('checkout');
     Route::post('/checkout/{listing:slug}', [OrderController::class, 'store'])->name('checkout.store');
->>>>>>> 652e3f3cc35fb90058125d693cdf1bd413546705
     Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
     Route::get('/orders/{order:reference}', [OrderController::class, 'show'])->name('orders.show');
 
