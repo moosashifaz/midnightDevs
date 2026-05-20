@@ -1,4 +1,5 @@
 <x-marketplace-layout>
+    <div class="page-wrap">
     <div class="flex items-end justify-between mb-6">
         <div>
             <p class="section-eyebrow">Provider portal</p>
@@ -94,4 +95,5 @@
             </div>
         @endif
     </section>
+    </div>
 </x-marketplace-layout>

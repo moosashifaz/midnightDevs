@@ -72,6 +72,31 @@
     .nav-pill-active {
         @apply nav-pill bg-moodhu-200 font-medium text-madi-700;
     }
+
+    .page-wrap {
+        @apply w-full px-6 sm:px-10 lg:px-16 py-6;
+    }
+
+    /* Aerial / top-down water footage (e.g. jet skis) — keep action in frame */
+    .hero-media {
+        object-position: center center;
+    }
+}
+
+@layer utilities {
+    .hero-video-fallback {
+        @apply hidden;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .hero-video-fallback {
+            @apply block;
+        }
+
+        .hero-video {
+            @apply hidden;
+        }
+    }
 }
 
 @media (prefers-reduced-motion: reduce) {

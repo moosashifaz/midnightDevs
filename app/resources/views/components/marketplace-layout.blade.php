@@ -7,7 +7,6 @@
     <meta name="theme-color" content="#5999CF">
     <link rel="manifest" href="/manifest.json">
     <link rel="apple-touch-icon" href="/icons/icon-192.png">
-    <link rel="preload" href="/images/hero/maafushi.webp" as="image" type="image/webp">
     <title>{{ $title ?? 'AfterArrival — Maldives in-stay services' }}</title>
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=plus-jakarta-sans:400,500,600,700&display=swap" rel="stylesheet" />
@@ -17,7 +16,7 @@
 <body class="font-sans antialiased bg-moodhu-50 min-h-screen text-muraka-900">
 
     <header class="sticky top-0 z-40 backdrop-blur bg-white/90 border-b border-moodhu-200">
-        <div class="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between gap-4">
+        <div class="w-full px-6 sm:px-10 lg:px-16 py-3 flex items-center justify-between gap-4">
             <a href="{{ route('home') }}" class="flex items-center gap-2.5">
                 <span class="inline-flex items-center justify-center w-9 h-9 rounded-xl bg-madi-500 text-white shadow-card">
                     <x-icons.icon name="waves" class="w-5 h-5" />
@@ -56,19 +55,19 @@
     </header>
 
     @if (session('status'))
-        <div class="max-w-6xl mx-auto px-4 mt-3">
+        <div class="w-full px-6 sm:px-10 lg:px-16 mt-3">
             <div class="rounded-xl bg-ruh-50 border border-ruh-200 text-ruh-900 px-4 py-3 text-sm">
                 {{ session('status') }}
             </div>
         </div>
     @endif
 
-    <main class="max-w-6xl mx-auto px-4 py-6 pb-24 sm:pb-6">
+    <main class="w-full pb-24 sm:pb-6">
         {{ $slot }}
     </main>
 
     <nav class="sm:hidden fixed bottom-0 inset-x-0 z-40 bg-white/95 border-t border-moodhu-200 backdrop-blur">
-        <div class="grid grid-cols-4 text-xs max-w-6xl mx-auto">
+        <div class="grid grid-cols-4 text-xs w-full">
             @foreach(\App\Models\Listing::CATEGORIES as $key => $label)
                 @php $active = request()->routeIs('category') && request()->route('category') === $key; @endphp
                 <a href="{{ route('category', $key) }}"

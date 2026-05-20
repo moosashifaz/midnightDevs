@@ -1,4 +1,5 @@
 <x-marketplace-layout>
+    <div class="page-wrap">
     <a href="{{ route('listing', $listing) }}" class="inline-flex items-center gap-1 text-sm text-miyaru-700 hover:text-madi-600 font-medium transition-colors duration-150">
         <x-icons.icon name="chevron-left" class="w-4 h-4" /> Back
     </a>
@@ -75,5 +76,6 @@
                 <p class="text-[11px] text-muraka-500 mt-4">FX from Central Bank of Maldives reference. No platform fee at checkout.</p>
             </x-ui.card>
         </aside>
+    </div>
     </div>
 </x-marketplace-layout>

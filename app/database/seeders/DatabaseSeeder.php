@@ -122,6 +122,7 @@ class DatabaseSeeder extends Seeder
 
             foreach ($data['listings'] as $listing) {
                 $slug = Str::slug($listing['title']);
+
                 Listing::updateOrCreate(
                     ['provider_id' => $provider->id, 'slug' => $slug],
                     [

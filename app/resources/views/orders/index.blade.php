@@ -1,4 +1,5 @@
 <x-marketplace-layout>
+    <div class="page-wrap">
     <x-ui.page-header title="My orders" />
 
     @if($orders->isEmpty())
@@ -38,4 +39,5 @@
 
         <div class="mt-4">{{ $orders->links() }}</div>
     @endif
+    </div>
 </x-marketplace-layout>

@@ -1,4 +1,5 @@
 <x-marketplace-layout>
+    <div class="page-wrap">
     <a href="{{ route('orders.index') }}" class="inline-flex items-center gap-1 text-sm text-miyaru-700 hover:text-madi-600 font-medium transition-colors duration-150">
         <x-icons.icon name="chevron-left" class="w-4 h-4" /> My orders
     </a>
@@ -98,4 +99,5 @@
             </div>
         </aside>
     </article>
+    </div>
 </x-marketplace-layout>
