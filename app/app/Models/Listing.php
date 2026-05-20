@@ -12,10 +12,17 @@ class Listing extends Model
     use HasFactory;
 
     public const CATEGORIES = [
-        'eat' => 'Eat',
-        'wash' => 'Wash',
-        'buy' => 'Buy',
-        'experience' => 'Experience',
+        'eat' => 'Taste',
+        'wash' => 'Refresh',
+        'buy' => 'Shop',
+        'experience' => 'Explore',
+    ];
+
+    public const CATEGORY_SUBLABELS = [
+        'eat' => 'Local food & cafés',
+        'wash' => 'Wellness & essentials',
+        'buy' => 'Crafts & souvenirs',
+        'experience' => 'Experiences & island life',
     ];
 
     public const TYPES = [
@@ -66,5 +73,10 @@ class Listing extends Model
     public function categoryLabel(): string
     {
         return self::CATEGORIES[$this->category] ?? $this->category;
+    }
+
+    public function categorySublabel(): string
+    {
+        return self::CATEGORY_SUBLABELS[$this->category] ?? '';
     }
 }

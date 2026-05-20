@@ -27,7 +27,12 @@ class MarketplaceController extends Controller
                 ->where('is_active', true)
                 ->when($island, fn ($q) => $q->where('island_id', $island->id))
                 ->count();
-            return ['key' => $key, 'label' => $label, 'count' => $count];
+            return [
+                'key' => $key,
+                'label' => $label,
+                'sublabel' => Listing::CATEGORY_SUBLABELS[$key] ?? null,
+                'count' => $count,
+            ];
         })->values();
 
         return view('marketplace.home', [

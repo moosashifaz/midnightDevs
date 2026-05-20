@@ -58,6 +58,7 @@
                 <x-ui.category-tile
                     :category="$cat['key']"
                     :label="$cat['label']"
+                    :sublabel="$cat['sublabel']"
                     :count="$cat['count']"
                     :href="route('category', $cat['key'])"
                 />
