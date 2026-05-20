@@ -14,8 +14,8 @@
         @vite(['resources/css/app.css', 'resources/js/app.js'])
         @livewireStyles
     </head>
-    <body class="font-sans text-muraka-900 antialiased bg-moodhu-50">
-        <div class="min-h-screen flex flex-col sm:justify-center items-center pt-6 sm:pt-0 px-4">
+    <body class="font-sans text-muraka-900 antialiased bg-gradient-to-br from-moodhu-50 via-white to-madi-50/30 min-h-screen">
+        <div class="min-h-screen flex flex-col sm:justify-center items-center pt-8 sm:pt-12 pb-10 px-4">
             <div>
                 <a href="{{ route('home') }}" wire:navigate class="flex flex-col items-center gap-2">
                     <span class="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-madi-500 text-white shadow-card">
@@ -26,7 +26,7 @@
                 </a>
             </div>
 
-            <div class="w-full sm:max-w-md mt-6 px-6 py-6 card">
+            <div class="w-full sm:max-w-lg mt-6 px-6 py-6 sm:px-8 sm:py-8 card ring-1 ring-madi-100/50 shadow-card">
                 {{ $slot }}
             </div>
         </div>

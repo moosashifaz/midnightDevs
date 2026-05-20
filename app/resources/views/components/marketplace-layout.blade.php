@@ -38,6 +38,7 @@
 
             <div class="flex items-center gap-3 text-sm">
                 @auth
+                    <a href="{{ route('plans.index') }}" class="btn-ghost hidden sm:inline-flex py-1.5">My plans</a>
                     <a href="{{ route('orders.index') }}" class="btn-ghost hidden sm:inline-flex py-1.5">My Orders</a>
                     @if(auth()->user()->isProvider())
                         <a href="{{ route('provider.dashboard') }}" class="btn-ghost py-1.5">Provider</a>

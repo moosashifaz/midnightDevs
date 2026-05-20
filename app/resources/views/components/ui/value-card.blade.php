@@ -4,6 +4,7 @@
     'description',
     'accent' => 'madi',
     'accentPosition' => 'top-left',
+    'interactive' => true,
 ])
 
 @php
@@ -24,10 +25,10 @@ $accentPositionClasses = match($accentPosition) {
 
 <article
     {{ $attributes->merge([
-        'class' => 'value-card group relative flex flex-col overflow-hidden rounded-3xl border border-moodhu-200/80 bg-white p-6 pt-8 shadow-card transition-shadow duration-200 hover:shadow-card-hover focus-within:shadow-card-hover focus-within:ring-2 focus-within:ring-madi-300 focus-within:ring-offset-2 cursor-pointer',
+        'class' => 'value-card group relative flex flex-col overflow-hidden rounded-3xl border border-moodhu-200/80 bg-white p-6 pt-8 shadow-card transition-shadow duration-200'
+            .($interactive ? ' hover:shadow-card-hover focus-within:shadow-card-hover focus-within:ring-2 focus-within:ring-madi-300 focus-within:ring-offset-2 cursor-pointer' : ''),
     ]) }}
-    role="button"
-    tabindex="0"
+    @if($interactive) role="button" tabindex="0" @endif
 >
     <div class="pointer-events-none absolute {{ $accentPositionClasses }} {{ $accentClasses }} opacity-90" aria-hidden="true"></div>
     <div class="pointer-events-none absolute inset-x-0 top-16 h-px bg-moodhu-200" aria-hidden="true"></div>
@@ -44,7 +45,9 @@ $accentPositionClasses = match($accentPosition) {
     <h3 class="relative z-10 text-base font-bold text-muraka-900 leading-snug mb-2">{{ $title }}</h3>
     <p class="relative z-10 text-sm text-muraka-600 leading-relaxed flex-1">{{ $description }}</p>
 
-    <p class="relative z-10 mt-4 text-xs font-medium text-madi-600 opacity-0 transition-opacity duration-150 group-hover:opacity-100 group-focus-within:opacity-100">
-        Tap to see how it works →
-    </p>
+    @if($interactive)
+        <p class="relative z-10 mt-4 text-xs font-medium text-madi-600 opacity-0 transition-opacity duration-150 group-hover:opacity-100 group-focus-within:opacity-100">
+            Tap to see how it works →
+        </p>
+    @endif
 </article>
