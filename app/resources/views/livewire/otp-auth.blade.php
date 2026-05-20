@@ -1,6 +1,6 @@
 <div>
     @if(!$otpSent)
-        <div class="space-y-4">
+        <form wire:submit.prevent="sendOtp" class="space-y-4">
             <div class="flex gap-2 mb-4">
                 <button 
                     type="button" 
@@ -33,15 +33,15 @@
             </div>
 
             <button 
-                wire:click="sendOtp"
+                type="submit"
                 :disabled="$loading"
                 class="btn-primary w-full py-3 {{ $loading ? 'opacity-50 cursor-not-allowed' : '' }}"
             >
                 {{ $loading ? 'Sending...' : 'Send Verification Code' }}
             </button>
-        </div>
+        </form>
     @else
-        <div class="space-y-4">
+        <form wire:submit.prevent="verifyOtp" class="space-y-4">
             <div class="bg-madi-50 border border-madi-200 rounded-lg p-4">
                 <p class="text-sm text-madi-800">
                     <x-icons.icon name="check-circle" class="w-4 h-4 inline mr-1" />
@@ -63,7 +63,7 @@
             </div>
 
             <button 
-                wire:click="verifyOtp"
+                type="submit"
                 :disabled="$loading"
                 class="btn-primary w-full py-3 {{ $loading ? 'opacity-50 cursor-not-allowed' : '' }}"
             >
@@ -72,7 +72,8 @@
 
             <div class="text-center">
                 <button 
-                    wire:click="resendOtp"
+                    type="button"
+                    wire:click.prevent="resendOtp"
                     :disabled="$loading"
                     class="text-sm text-madi-600 hover:text-madi-700 font-medium {{ $loading ? 'opacity-50 cursor-not-allowed' : '' }}"
                 >
@@ -80,14 +81,15 @@
                 </button>
                 <span class="text-muraka-400 mx-2">|</span>
                 <button 
-                    wire:click="resetForm"
+                    type="button"
+                    wire:click.prevent="resetForm"
                     :disabled="$loading"
                     class="text-sm text-muraka-600 hover:text-muraka-700 font-medium {{ $loading ? 'opacity-50 cursor-not-allowed' : '' }}"
                 >
                     Change {{ $type === 'email' ? 'Email' : 'Phone' }}
                 </button>
             </div>
-        </div>
+        </form>
     @endif
 
     @if($message)

@@ -117,6 +117,7 @@ class OtpService
             if (!$user) {
                 $user = User::create([
                     'phone' => $identifier,
+                    'email' => $this->syntheticEmailForPhone($identifier),
                     'password' => bcrypt(Str::random(16)), // Random password for OTP users
                     'role' => User::ROLE_TOURIST,
                     'name' => 'Tourist',
@@ -178,5 +179,19 @@ class OtpService
         
         // For now, we'll simulate SMS sending
         // You can replace this with actual SMS service integration
+    }
+
+    /**
+     * Create a deterministic synthetic email for a phone-only user
+     */
+    private function syntheticEmailForPhone(string $phone): string
+    {
+        // Keep digits and a few safe characters for local-part
+        $local = preg_replace('/[^A-Za-z0-9_.+-]/', '', $phone);
+        if (empty($local)) {
+            $local = 'user'.Str::random(8);
+        }
+
+        return $local.'@phone.local';
     }
 }
