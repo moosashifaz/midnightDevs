@@ -1,4 +1,4 @@
-# System Architecture — v0.1
+# AfterArrival — System Architecture v0.1
 
 **For:** Lead developer review
 **Last updated:** 2026-05-20

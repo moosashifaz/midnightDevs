@@ -1,6 +1,8 @@
-# PRD — Maldives Local Services Marketplace (working title)
+# PRD — AfterArrival
 
-**Status:** Draft v0.4
+*Maldives in-stay services marketplace*
+
+**Status:** Draft v0.5
 **Owner:** @moosashifaz
 **Last updated:** 2026-05-20
 
@@ -12,7 +14,7 @@
 
 ## 1. Summary
 
-A two-sided marketplace connecting tourists *already in the Maldives* with local
+**AfterArrival** is a two-sided marketplace connecting tourists *already in the Maldives* with local
 service providers on inhabited islands — laundry, souvenir shops, local food,
 training/classes, experiences, retail, wellness, and other day-to-day services
 consumed *during* a stay. The platform handles discovery, booking, payment, and trust,
@@ -558,7 +560,7 @@ services layer and avoid head-on competition with entrenched players.
 5. **Commission rates** — flat or by category?
 6. **Tech stack** — RN vs native; backend language; team skills?
 7. **Insurance requirement** for water-based experiences?
-8. **Brand / product name** — current repo is `midnightDevs`; the product needs its own name.
+8. ~~**Brand / product name**~~ — **Resolved: AfterArrival.** The literal positioning ("everything after you arrive") doubles as the value prop in the name.
 9. **Domestic-only or international-tourist focus from day 1?** — this changes the
    payment-rail priority (Swipe-first vs card-first).
 10. **Tourist tax refund** — does Maldives offer a TGST refund on departure for
