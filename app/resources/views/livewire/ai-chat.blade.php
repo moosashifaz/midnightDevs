@@ -61,6 +61,7 @@
                                 <span class="w-1.5 h-1.5 bg-madi-400 rounded-full animate-bounce" style="animation-delay: 150ms;"></span>
                                 <span class="w-1.5 h-1.5 bg-madi-400 rounded-full animate-bounce" style="animation-delay: 300ms;"></span>
                                 <span class="text-[11px] text-muraka-500 ml-2">Thinking...</span>
+                                <button wire:click="abortThinking" title="Cancel" class="ml-2 text-[10px] text-muraka-400 hover:text-red-600 underline">cancel</button>
                             </div>
                         </div>
                     </div>
@@ -72,8 +73,10 @@
                     <div class="text-[10px] uppercase tracking-label text-muraka-500 mb-1.5">Quick ask</div>
                     <div class="flex flex-wrap gap-1.5">
                         @foreach($suggestions as $suggestion)
-                            <button wire:click="quickAsk('{{ addslashes($suggestion) }}')"
-                                    class="text-[11px] bg-white border border-moodhu-300 hover:border-madi-400 hover:text-madi-700 text-muraka-700 px-2.5 py-1 rounded-full transition-colors duration-150">
+                            <button type="button"
+                                    wire:click="quickAsk('{{ addslashes($suggestion) }}')"
+                                    @disabled($isThinking)
+                                    class="text-[11px] bg-white border border-moodhu-300 hover:border-madi-400 hover:text-madi-700 text-muraka-700 px-2.5 py-1 rounded-full transition-colors duration-150 disabled:opacity-50">
                                 {{ $suggestion }}
                             </button>
                         @endforeach
@@ -82,7 +85,7 @@
             @endif
 
             <form wire:submit.prevent="send" class="border-t border-moodhu-200 p-2.5 flex gap-2 bg-white">
-                <input wire:model.live.debounce.500ms="input"
+                <input wire:model="input"
                        type="text"
                        placeholder="Ask about food, prices, etiquette…"
                        class="input-field flex-1 text-sm py-2 px-3"
@@ -90,19 +93,14 @@
                        maxlength="500"
                        @disabled($isThinking)>
                 <button type="submit"
-                        @disabled($isThinking || trim($input) === '')
+                        @disabled($isThinking)
                         class="btn-secondary shrink-0 px-3 py-2 disabled:cursor-not-allowed">
-                    <span wire:loading.remove wire:target="send">Send</span>
-                    <span wire:loading wire:target="send">...</span>
+                    Send
                 </button>
             </form>
 
             <p class="text-[10px] text-muraka-400 px-4 pb-2 -mt-1 text-center">AI assistant — confirm important details with the provider.</p>
         </div>
-
-        @if($isThinking)
-            <div wire:init="fetchReply"></div>
-        @endif
     @else
         <button wire:click="toggle"
                 class="group flex items-center gap-2 bg-gradient-to-r from-madi-600 to-madi-500 hover:from-madi-700 hover:to-madi-600 text-white rounded-full shadow-card-hover pl-3.5 pr-5 py-3 transition-all duration-200 hover:shadow-xl">

@@ -38,6 +38,14 @@ class AIChat extends Component
                 'content' => "Marhaba! I'm your AfterArrival concierge — ask me about food, laundry, souvenirs, experiences, or anything about your stay. I'll give you straight answers, including whether a price is fair.",
             ],
         ]);
+
+        // Defensive: if the last persisted message is a user turn without a
+        // following assistant reply (e.g. the page reloaded mid-conversation),
+        // don't leave the UI stuck in a thinking state.
+        $last = end($this->messages);
+        if ($last && $last['role'] === 'user') {
+            $this->isThinking = false;
+        }
     }
 
     public function toggle(): void
@@ -46,10 +54,16 @@ class AIChat extends Component
         $this->lastError = null;
     }
 
+    public function openChat(): void
+    {
+        $this->open = true;
+        $this->lastError = null;
+    }
+
     /**
-     * Submit a user message — appends it to the visible thread, marks the
-     * component as "thinking", and triggers fetchReply on the next Livewire
-     * tick so the user sees their message + the typing indicator immediately.
+     * Submit a user message. Appends it to the thread, marks the component
+     * as "thinking", and queues fetchReply() to run on the next browser tick
+     * so the typing indicator is visible while Claude responds.
      */
     public function send(): void
     {
@@ -65,11 +79,13 @@ class AIChat extends Component
         session()->put('aichat_messages', $this->messages);
 
         $this->dispatch('chat-scroll');
+        $this->js('$wire.fetchReply()');
     }
 
     /**
-     * Performs the actual Anthropic call. Triggered immediately after send()
-     * by the wire:poll-once / chat-thinking event so the UI updates first.
+     * Performs the actual Anthropic call. Always called via $this->js() right
+     * after send() / askAboutListing() / askAboutCategory() have appended the
+     * user message and re-rendered the chat with isThinking=true.
      */
     public function fetchReply(AIAgentService $agent): void
     {
@@ -85,27 +101,37 @@ class AIChat extends Component
 
         $history = array_slice($this->messages, 0, -1);
 
-        $reply = $agent->reply($latest['content'], auth()->user(), $history);
-        $this->messages[] = [
-            'role' => 'assistant',
-            'content' => $reply['content'],
-        ];
-        $this->isThinking = false;
+        try {
+            $reply = $agent->reply($latest['content'], auth()->user(), $history);
+            $this->messages[] = [
+                'role' => 'assistant',
+                'content' => $reply['content'],
+            ];
+        } catch (\Throwable $e) {
+            $this->messages[] = [
+                'role' => 'assistant',
+                'content' => "I hit a snag connecting just now. Try again in a moment, or browse a category from the menu above.",
+            ];
+            $this->lastError = $e->getMessage();
+        }
 
+        $this->isThinking = false;
         session()->put('aichat_messages', $this->messages);
         $this->dispatch('chat-scroll');
     }
 
     public function quickAsk(string $prompt): void
     {
+        if ($this->isThinking) {
+            return;
+        }
         $this->input = $prompt;
         $this->send();
     }
 
     /**
-     * Listener — when a tourist taps "Ask the concierge" on a listing or
-     * category page, this opens the chat and auto-sends a contextual
-     * question about the selected item.
+     * Listener — when a tourist taps "Ask the concierge" on a listing card
+     * or detail page, opens the chat and auto-asks Claude about that item.
      *
      * Fired from blade with:
      *   Livewire.dispatch('ask-about-listing', { listingId: 42 })
@@ -129,10 +155,17 @@ class AIChat extends Component
 
         $this->open = true;
         $this->lastError = null;
+
+        if ($this->isThinking) {
+            return;
+        }
+
         $this->messages[] = ['role' => 'user', 'content' => $question];
         $this->isThinking = true;
         session()->put('aichat_messages', $this->messages);
+
         $this->dispatch('chat-scroll');
+        $this->js('$wire.fetchReply()');
     }
 
     /**
@@ -142,15 +175,30 @@ class AIChat extends Component
     public function askAboutCategory(string $category): void
     {
         $label = Listing::CATEGORIES[$category] ?? ucfirst($category);
-
         $question = "What would you recommend in the {$label} category right now? Pick your top 2-3 and tell me why.";
 
         $this->open = true;
         $this->lastError = null;
+
+        if ($this->isThinking) {
+            return;
+        }
+
         $this->messages[] = ['role' => 'user', 'content' => $question];
         $this->isThinking = true;
         session()->put('aichat_messages', $this->messages);
+
         $this->dispatch('chat-scroll');
+        $this->js('$wire.fetchReply()');
+    }
+
+    /**
+     * Manual reset — exposed in the UI so a user can recover if a request
+     * truly hangs (e.g. dropped network mid-call).
+     */
+    public function abortThinking(): void
+    {
+        $this->isThinking = false;
     }
 
     public function clearChat(): void
