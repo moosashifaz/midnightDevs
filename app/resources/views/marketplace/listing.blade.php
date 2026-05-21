@@ -65,7 +65,7 @@
                             <span aria-hidden="true" class="absolute -top-6 -right-6 h-16 w-16 rounded-full bg-white/20 blur-2xl"></span>
                             <span class="relative flex items-center justify-center gap-2">
                                 <x-icons.icon name="ask-ai" class="h-5 w-5 text-muraka-900" />
-                                Ask the concierge about this
+                                Learn more
                             </span>
                         </button>
                     @else

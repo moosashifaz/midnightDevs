@@ -89,8 +89,8 @@
                     <button
                         type="button"
                         onclick="Livewire.dispatch('ask-about-listing', { listingId: {{ $listingId }} })"
-                        title="Ask the concierge about this"
-                        aria-label="Ask the concierge about {{ $title }}"
+                        title="Learn more about this activity"
+                        aria-label="Learn more about {{ $title }}"
                         class="inline-flex items-center justify-center rounded-full bg-white border border-moodhu-200 p-2 text-iru-700 shadow-sm transition-all duration-150 hover:border-madi-300 hover:bg-iru-50 hover:text-iru-800 focus:outline-none focus:ring-2 focus:ring-madi-400 focus:ring-offset-2"
                     >
                         <x-icons.icon name="ask-ai" class="h-4 w-4" />

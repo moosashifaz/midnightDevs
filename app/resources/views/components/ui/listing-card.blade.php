@@ -12,8 +12,8 @@ $url = $href ?? route('listing', $listing);
     @auth
         <button type="button"
                 onclick="Livewire.dispatch('ask-about-listing', { listingId: {{ $listing->id }} })"
-                title="Ask the concierge about this"
-                aria-label="Ask the concierge about {{ $listing->title }}"
+                title="Learn more about this listing"
+                aria-label="Learn more about {{ $listing->title }}"
                 class="absolute top-2.5 right-2.5 z-10 inline-flex items-center justify-center rounded-full bg-white/95 p-2 text-iru-700 shadow-card backdrop-blur transition-all duration-150 hover:scale-110 hover:bg-iru-100 hover:text-iru-800 focus:outline-none focus:ring-2 focus:ring-iru-400 focus:ring-offset-2">
             <x-icons.icon name="ask-ai" class="h-4 w-4" />
         </button>

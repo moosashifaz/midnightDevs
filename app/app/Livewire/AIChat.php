@@ -130,7 +130,7 @@ class AIChat extends Component
     }
 
     /**
-     * Listener — when a tourist taps "Ask the concierge" on a listing card
+     * Listener — when a tourist taps "Learn more" on a listing card
      * or detail page, opens the chat and auto-asks Claude about that item.
      *
      * Fired from blade with:
