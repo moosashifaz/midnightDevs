@@ -1,7 +1,7 @@
 # AfterArrival
 
 > 🏆 **2nd Place — Co.Lab 26 Hackathon · Track 2: Fintech with BML Payment APIs**
-> *NADCC × BML × MINDCo · Hotel Jen, Malé · May 20–21, 2026*
+> *Maldives AI Lab × BML × MINDCo · Hotel Jen, Malé · May 20–21, 2026*
 
 ---
 
@@ -18,7 +18,7 @@
 
 ## The team
 
-**AfterCode** — Co.Lab 26 Hackathon (NADCC / BML / MINDCo)
+**AfterCode** — Co.Lab 26 Hackathon (Maldives AI Lab / BML / MINDCo)
 
 - **Moosa Shifaz** — [@moosashifaz](https://github.com/moosashifaz)
 - **Mohamed Adhuham** — [@adhham](https://github.com/adhham)
@@ -204,7 +204,7 @@ A Laravel 13 monolith + SQLite (or Postgres in production) backs three roles: to
 ## Acknowledgments
 
 - **Bank of Maldives** for the Swipe Merchants API and the [open-source CLI](https://github.com/BML-Digital/swipe-merchants-dev) that makes local development possible.
-- **NADCC / MINDCo** for organizing Co.Lab 26.
+- **Maldives AI Lab** (NADCC) **/ MINDCo** for organizing Co.Lab 26.
 - The Maldives' local-island operators, café owners, dhoni captains, and artisans whose work this platform tries to make discoverable.
 
 ---
