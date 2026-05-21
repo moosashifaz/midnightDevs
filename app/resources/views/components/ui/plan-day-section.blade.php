@@ -4,6 +4,11 @@
     'items' => [],
     'showBook' => false,
     'showAsk' => false,
+    'editable' => false,
+    'dayIndex' => 0,
+    'chooserOpen' => false,
+    'chooserItemIndex' => null,
+    'chooserOptions' => [],
     'compact' => false,
     'timeline' => false,
 ])
@@ -23,14 +28,21 @@
             <p class="text-sm text-muraka-500">No items scheduled.</p>
         @else
             <div class="space-y-3 {{ $compact ? '' : 'rounded-2xl border border-moodhu-200 bg-moodhu-50/50 p-3' }}">
-                @foreach($items as $item)
-                    <x-ui.plan-listing-row
-                        :listing="$item['listing'] ?? []"
-                        :note="$item['note'] ?? null"
-                        :show-book="$showBook"
-                        :show-ask="$showAsk"
-                        :compact="$compact"
-                    />
+                @foreach($items as $itemIndex => $item)
+                    <div wire:key="plan-item-{{ $dayIndex }}-{{ $itemIndex }}">
+                        <x-ui.plan-listing-row
+                            :listing="$item['listing'] ?? []"
+                            :note="$item['note'] ?? null"
+                            :show-book="$showBook"
+                            :show-ask="$showAsk"
+                            :editable="$editable"
+                            :day-index="$dayIndex"
+                            :item-index="$itemIndex"
+                            :chooser-open="$chooserOpen && $chooserItemIndex === $itemIndex"
+                            :chooser-options="$chooserOpen && $chooserItemIndex === $itemIndex ? $chooserOptions : []"
+                            :compact="$compact"
+                        />
+                    </div>
                 @endforeach
             </div>
         @endif

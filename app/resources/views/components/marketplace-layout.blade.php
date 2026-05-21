@@ -18,7 +18,7 @@
     <header class="site-header sticky top-0 z-40 backdrop-blur bg-white/90 border-b border-moodhu-200">
         <div class="site-header-inner w-full px-6 sm:px-10 lg:px-16 py-2 flex items-center justify-between gap-4">
             <a href="{{ route('home') }}" class="inline-flex shrink-0 items-center" aria-label="AfterArrival home">
-                <x-ui.brand-logo :size="144" class="header-brand-lottie" />
+                <x-ui.brand-logo :size="160" class="header-brand-lottie" />
             </a>
 
             <nav class="hidden sm:flex items-center gap-1 text-sm">

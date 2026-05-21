@@ -119,8 +119,18 @@
     @elseif($hasPlan)
         <section class="max-w-3xl mx-auto scroll-mt-6" aria-label="Your itinerary">
         @if($summary)
-            <p class="text-sm text-muraka-700 mb-6 leading-relaxed">{{ $summary }}</p>
+            <p class="text-sm text-muraka-700 mb-3 leading-relaxed">{{ $summary }}</p>
         @endif
+
+        @if($planMessage)
+            <p class="text-sm text-madi-800 font-medium mb-3 rounded-xl border border-madi-200 bg-madi-50/80 px-3 py-2" wire:transition>
+                {{ $planMessage }}
+            </p>
+        @endif
+
+        <p class="text-xs text-muraka-500 mb-6 rounded-xl border border-moodhu-200 bg-moodhu-50/80 px-3 py-2">
+            This is a flexible draft — use <strong class="text-muraka-700">Choose</strong> to pick from options, <strong class="text-muraka-700">Swap</strong> for a quick alternative, or <strong class="text-muraka-700">Remove</strong> to drop an activity.
+        </p>
 
         @if(count($planDays) === 0)
             <x-ui.card class="p-8 text-center max-w-lg mx-auto">
@@ -131,15 +141,22 @@
             </x-ui.card>
         @else
             <div class="max-w-3xl mx-auto planner-timeline">
-                @foreach($planDays as $dayBlock)
-                    <x-ui.plan-day-section
-                        :day="$dayBlock['day']"
-                        :title="$dayBlock['title']"
-                        :items="$dayBlock['items']"
-                        :show-book="auth()->check()"
-                        :show-ask="auth()->check()"
-                        timeline
-                    />
+                @foreach($planDays as $dayIndex => $dayBlock)
+                    <div wire:key="plan-day-{{ $dayIndex }}">
+                        <x-ui.plan-day-section
+                            :day="$dayBlock['day']"
+                            :title="$dayBlock['title']"
+                            :items="$dayBlock['items']"
+                            :day-index="$dayIndex"
+                            :editable="auth()->check()"
+                            :chooser-open="$chooserDayIndex === $dayIndex"
+                            :chooser-item-index="$chooserItemIndex"
+                            :chooser-options="$chooserOptions"
+                            :show-book="auth()->check()"
+                            :show-ask="auth()->check()"
+                            timeline
+                        />
+                    </div>
                 @endforeach
             </div>
 

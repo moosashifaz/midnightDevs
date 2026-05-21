@@ -3,10 +3,12 @@
 namespace App\Livewire;
 
 use App\Models\Island;
+use App\Models\Listing;
 use App\Models\SavedPlan;
 use App\Services\AIPlannerService;
 use App\Services\Planner\PlanGoogleCalendarUrl;
 use App\Services\Planner\PlanInterests;
+use App\Services\Planner\PlanItemAlternatives;
 use App\Services\Planner\PlanResult;
 use Illuminate\Http\Request;
 use Livewire\Attributes\Computed;
@@ -40,6 +42,17 @@ class PlanBuilder extends Component
     /** @var list<string> */
     public array $interests = PlanInterests::ALL;
 
+    public ?int $planIslandId = null;
+
+    public ?string $planMessage = null;
+
+    public ?int $chooserDayIndex = null;
+
+    public ?int $chooserItemIndex = null;
+
+    /** @var list<array{listing: array<string, mixed>, is_current: bool}> */
+    public array $chooserOptions = [];
+
     public function mount(Request $request): void
     {
         $this->budgetUsd = max(100, (float) $request->query('budget', 2000));
@@ -48,6 +61,7 @@ class PlanBuilder extends Component
 
         $island = $this->resolveIsland($request);
         $this->islandName = $island?->name;
+        $this->planIslandId = $island?->id;
 
         if ($request->boolean('generate')) {
             if (! $request->user()) {
@@ -93,6 +107,148 @@ class PlanBuilder extends Component
         ]);
 
         session()->flash('status', 'Plan saved to My plans.');
+    }
+
+    public function swapPlanItem(int $dayIndex, int $itemIndex): void
+    {
+        if (! $this->hasPlan || ! isset($this->planDays[$dayIndex]['items'][$itemIndex])) {
+            return;
+        }
+
+        $island = $this->planIsland();
+        if (! $island) {
+            $this->planMessage = 'Select an island first, then regenerate your plan.';
+
+            return;
+        }
+
+        $listingId = (int) ($this->planDays[$dayIndex]['items'][$itemIndex]['listing']['id'] ?? 0);
+        $current = Listing::query()->with('provider')->find($listingId);
+        if (! $current) {
+            $this->planMessage = 'Could not load this listing. Try regenerating your plan.';
+
+            return;
+        }
+
+        $swapper = app(PlanItemAlternatives::class);
+        $candidates = $swapper->forSlot(
+            $island,
+            $this->planDays,
+            $dayIndex,
+            $itemIndex,
+            $this->budgetUsd,
+        );
+
+        $next = $swapper->nextSwap($current, $candidates);
+        if (! $next) {
+            $this->planMessage = 'No other options in this category within your budget — try Remove or Regenerate.';
+
+            return;
+        }
+
+        $this->applyListingToSlot($dayIndex, $itemIndex, $next);
+        $this->closeChooser();
+        $this->planMessage = 'Swapped to '.$next->title.'.';
+    }
+
+    public function toggleChooseOptions(int $dayIndex, int $itemIndex): void
+    {
+        if ($this->chooserDayIndex === $dayIndex && $this->chooserItemIndex === $itemIndex) {
+            $this->closeChooser();
+
+            return;
+        }
+
+        if (! $this->hasPlan || ! isset($this->planDays[$dayIndex]['items'][$itemIndex])) {
+            return;
+        }
+
+        $island = $this->planIsland();
+        if (! $island) {
+            $this->planMessage = 'Select an island first, then regenerate your plan.';
+
+            return;
+        }
+
+        $options = app(PlanItemAlternatives::class)->optionsForSlot(
+            $island,
+            $this->planDays,
+            $dayIndex,
+            $itemIndex,
+            $this->budgetUsd,
+        );
+
+        if (count($options) <= 1) {
+            $this->planMessage = 'No other options in this category within your budget — try Remove or Regenerate.';
+
+            return;
+        }
+
+        $this->chooserDayIndex = $dayIndex;
+        $this->chooserItemIndex = $itemIndex;
+        $this->chooserOptions = $options;
+        $this->planMessage = null;
+    }
+
+    public function closeChooser(): void
+    {
+        $this->chooserDayIndex = null;
+        $this->chooserItemIndex = null;
+        $this->chooserOptions = [];
+    }
+
+    public function pickPlanItem(int $dayIndex, int $itemIndex, int $listingId): void
+    {
+        if ($this->chooserDayIndex !== $dayIndex || $this->chooserItemIndex !== $itemIndex) {
+            return;
+        }
+
+        $allowed = collect($this->chooserOptions)
+            ->first(fn (array $option) => (int) ($option['listing']['id'] ?? 0) === $listingId);
+
+        if (! $allowed) {
+            return;
+        }
+
+        $listing = Listing::query()->with('provider')->find($listingId);
+        if (! $listing) {
+            return;
+        }
+
+        $this->applyListingToSlot($dayIndex, $itemIndex, $listing);
+        $this->closeChooser();
+        $this->planMessage = 'Chosen: '.$listing->title.'.';
+    }
+
+    public function removePlanItem(int $dayIndex, int $itemIndex): void
+    {
+        if (! $this->hasPlan || ! isset($this->planDays[$dayIndex]['items'][$itemIndex])) {
+            return;
+        }
+
+        $planDays = $this->planDays;
+        $items = $planDays[$dayIndex]['items'];
+        array_splice($items, $itemIndex, 1);
+        $planDays[$dayIndex]['items'] = array_values($items);
+        $this->planDays = $planDays;
+
+        $this->recalculateSpent();
+        $this->closeChooser();
+        $this->planMessage = 'Removed from your plan.';
+    }
+
+    protected function applyListingToSlot(int $dayIndex, int $itemIndex, Listing $listing): void
+    {
+        $note = $this->planDays[$dayIndex]['items'][$itemIndex]['note'] ?? null;
+
+        $planDays = $this->planDays;
+        $planDays[$dayIndex]['items'][$itemIndex] = [
+            'listing' => PlanResult::listingSnapshot($listing),
+            'note' => $note,
+        ];
+        $this->planDays = $planDays;
+
+        $this->recalculateSpent();
     }
 
     #[Computed]
@@ -161,8 +317,10 @@ class PlanBuilder extends Component
             $prefs,
         );
         $this->applyPlan($result);
+        $this->planIslandId = $island->id;
         $this->hasPlan = true;
         $this->isGenerating = false;
+        $this->closeChooser();
     }
 
     protected function applyPlan(PlanResult $plan): void
@@ -172,6 +330,18 @@ class PlanBuilder extends Component
         $this->spentUsd = $plan->spentUsd;
         $this->summary = $plan->summary;
         $this->planDays = $plan->planDays;
+    }
+
+    protected function recalculateSpent(): void
+    {
+        $this->spentUsd = app(PlanItemAlternatives::class)->spentUsd($this->planDays);
+    }
+
+    protected function planIsland(): ?Island
+    {
+        return $this->planIslandId
+            ? Island::find($this->planIslandId)
+            : null;
     }
 
     protected function resolveIsland(Request $request): ?Island
