@@ -1,10 +1,16 @@
 # AfterArrival
 
+> 🏆 **2nd Place — Co.Lab 26 Hackathon · Track 2: Fintech with BML Payment APIs**
+> *NADCC × BML × MINDCo · Hotel Jen, Malé · May 20–21, 2026*
+
+---
+
 > **Maldives, after you arrive.**
 > An AI-powered marketplace that connects tourists on Maldivian islands with verified local providers for food, laundry, souvenirs, and experiences — paid digitally via **BML Swipe**.
 
-[![Track 2 — Fintech with BML Payment APIs](https://img.shields.io/badge/Co.Lab%2026-Track%202%20Fintech-5999CF)](https://colab.mv)
-[![License: MIT](https://img.shields.io/badge/License-MIT-E8A84A)](LICENSE)
+[![2nd Place — Co.Lab 26](https://img.shields.io/badge/Co.Lab%2026-2nd%20Place%20%F0%9F%A5%88-E8A84A)](https://colab.mv)
+[![Track 2 — Fintech with BML Payment APIs](https://img.shields.io/badge/Track%202-Fintech%20with%20BML-5999CF)](https://colab.mv)
+[![License: MIT](https://img.shields.io/badge/License-MIT-54B289)](LICENSE)
 [![Laravel](https://img.shields.io/badge/Laravel-13.x-FF2D20)](https://laravel.com)
 [![Powered by Claude](https://img.shields.io/badge/Powered%20by-Claude%20Sonnet%204.6-543AAD)](https://anthropic.com)
 
