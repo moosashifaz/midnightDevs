@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Listing;
 use App\Models\Order;
+use App\Services\SwipeCliService;
 use App\Services\SwipeService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -19,7 +20,7 @@ class OrderController extends Controller
         ]);
     }
 
-    public function store(Request $request, Listing $listing, SwipeService $swipe): RedirectResponse
+    public function store(Request $request, Listing $listing, SwipeCliService $swipe): RedirectResponse
     {
         if (!auth()->check()) {
             return redirect()->route('checkout', $listing)
@@ -31,7 +32,9 @@ class OrderController extends Controller
             'scheduled_for' => ['nullable', 'date', 'after_or_equal:today'],
         ]);
 
-        $order = DB::transaction(function () use ($request, $listing, $swipe) {
+        $paymentUrl = null;
+
+        $order = DB::transaction(function () use ($request, $listing, $swipe, $paymentUrl) {
             $order = Order::create([
                 'user_id' => $request->user()->id,
                 'listing_id' => $listing->id,
@@ -44,20 +47,12 @@ class OrderController extends Controller
                 'special_requests' => $request->input('special_requests'),
             ]);
 
-            $payment = $swipe->createCharge($order);
-
-            // If payment completed immediately, mark order paid and increment counts
-            if ($payment->status === \App\Models\Payment::STATUS_COMPLETED) {
-                $order->update(['status' => Order::STATUS_PAID]);
-                $listing->increment('order_count');
-            }
-
             return $order;
         });
         // Ensure we have the payment relation loaded to inspect the provider response
         $order->load('payment');
 
-        $paymentUrl = data_get($order->payment->swipe_payload ?? [], 'payment_url');
+        $paymentUrl = $swipe->createQrPayment($listing->price_usd);
 
         if ($paymentUrl) {
             return redirect()->away($paymentUrl);

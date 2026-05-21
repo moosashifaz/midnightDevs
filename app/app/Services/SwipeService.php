@@ -7,6 +7,7 @@ use App\Models\Payment;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Symfony\Component\Process\Process;
 
 /**
  * Thin wrapper around the BML Swipe Merchants API.
@@ -105,6 +106,40 @@ class SwipeService
 
     protected function mockChargeResponse(Order $order, float $amount): array
     {
+        try {
+            $process = new Process([
+                'swipe',
+                'payments',
+                'create',
+                '--amount', number_format($amount, 2, '.', ''),
+                '--currency', 'MVR',
+                '--type', 'QR',
+                '--output', 'json',
+            ]);
+            $process->setTimeout(20);
+            $process->run();
+
+            if ($process->isSuccessful()) {
+                $payload = json_decode($process->getOutput(), true);
+
+                if (json_last_error() === JSON_ERROR_NONE && is_array($payload) && isset($payload['id'])) {
+                    return $payload;
+                }
+
+                Log::warning('swipe.mock.cli.invalid_json', [
+                    'output' => $process->getOutput(),
+                    'error' => $process->getErrorOutput(),
+                ]);
+            } else {
+                Log::warning('swipe.mock.cli.failed', [
+                    'exit_code' => $process->getExitCode(),
+                    'error' => $process->getErrorOutput(),
+                ]);
+            }
+        } catch (\Throwable $e) {
+            Log::warning('swipe.mock.cli.exception', ['message' => $e->getMessage()]);
+        }
+
         return [
             'id' => 'mock_'.bin2hex(random_bytes(8)),
             'reference' => 'MOCK'.strtoupper(substr(bin2hex(random_bytes(4)), 0, 6)),
