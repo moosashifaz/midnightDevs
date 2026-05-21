@@ -44,13 +44,24 @@ class OrderController extends Controller
                 'special_requests' => $request->input('special_requests'),
             ]);
 
-            $swipe->createCharge($order);
+            $payment = $swipe->createCharge($order);
 
-            $order->update(['status' => Order::STATUS_PAID]);
-            $listing->increment('order_count');
+            // If payment completed immediately, mark order paid and increment counts
+            if ($payment->status === \App\Models\Payment::STATUS_COMPLETED) {
+                $order->update(['status' => Order::STATUS_PAID]);
+                $listing->increment('order_count');
+            }
 
             return $order;
         });
+        // Ensure we have the payment relation loaded to inspect the provider response
+        $order->load('payment');
+
+        $paymentUrl = data_get($order->payment->swipe_payload ?? [], 'payment_url');
+
+        if ($paymentUrl) {
+            return redirect()->away($paymentUrl);
+        }
 
         return redirect()->route('orders.show', $order)
             ->with('status', 'Payment confirmed via BML Swipe. Show your voucher to the provider when you collect.');

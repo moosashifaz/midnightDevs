@@ -42,6 +42,10 @@ class SwipeService
             $response = $this->liveCharge($order, $amount);
         }
 
+        // Normalize status from provider (e.g. "PENDING"/"COMPLETED")
+        $respStatus = strtolower($response['status'] ?? 'pending');
+        $savedStatus = $respStatus === 'completed' ? Payment::STATUS_COMPLETED : Payment::STATUS_PENDING;
+
         return Payment::create([
             'order_id' => $order->id,
             'swipe_transaction_id' => $response['id'] ?? null,
@@ -49,10 +53,10 @@ class SwipeService
             'swipe_short_code' => $response['short_code'] ?? null,
             'payment_type' => $response['type'] ?? 'QR',
             'amount_mvr' => $amount,
-            'currency' => 'MVR',
-            'status' => Payment::STATUS_COMPLETED,
+            'currency' => $response['currency'] ?? 'MVR',
+            'status' => $savedStatus,
             'escrow_state' => Payment::ESCROW_HOLDING,
-            'charged_at' => now(),
+            'charged_at' => $savedStatus === Payment::STATUS_COMPLETED ? now() : null,
             'platform_commission' => $commission,
             'provider_net' => $providerNet,
             'tgst_amount' => $tgst,
@@ -132,9 +136,10 @@ class SwipeService
             ->acceptJson()
             ->post($this->baseUrl.'/api/v1/payments', [
                 'amount' => $amount,
-                'currency' => 'MVR',
-                'type' => 'QR',
+                'currency' => strtoupper($order->currency ?? 'MVR'),
+                'type' => 'LINK',
                 'description' => sprintf('Order %s', $order->reference),
+                'recipient_vpa' => '',
             ])
             ->throw()
             ->json();
@@ -145,6 +150,10 @@ class SwipeService
     protected function fetchAccessToken(): string
     {
         return cache()->remember('swipe.token', now()->addMinutes(50), function () {
+            if (! $this->clientId || ! $this->clientSecret) {
+                throw new \RuntimeException('Swipe client credentials are not configured. Please set SWIPE_CLIENT_ID and SWIPE_CLIENT_SECRET in your .env file.');
+            }
+
             return Http::asForm()
                 ->post($this->baseUrl.'/oauth2/token', [
                     'grant_type' => 'client_credentials',
