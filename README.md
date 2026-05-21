@@ -183,17 +183,15 @@ midnightDevs/
 │   ├── public/                # PWA manifest, service worker, hero video + images
 │   ├── tests/                 # Pest feature tests
 │   └── routes/                # web.php (marketplace + planner + OTP)
-├── docs/
-│   ├── PRD.md                 # Product Requirements Document (v0.8, 19 sections)
-│   ├── PRD-simplified.md      # Condensed PRD for stakeholders
-│   └── ARCHITECTURE.md        # System architecture diagram
 ├── README.md                  # This file
 └── LICENSE                    # MIT
 ```
 
 ## Architecture in one paragraph
 
-A Laravel 13 monolith + SQLite (or Postgres in production) backs three roles: tourists, providers, and admins, distinguished by a `role` column on `users`. The marketplace surface is server-rendered Blade + Livewire components with Tailwind. The **AI Concierge** is a Livewire chat component that calls the Anthropic Messages API with a dynamic system prompt built from the signed-in tourist's trip context + a fresh snapshot of all active listings on their current island; Claude can only recommend by slug, and recommendations are hydrated against the listing table so hallucinations are structurally prevented. The **AI Planner** uses the same pattern but enforces a strict JSON schema (`days[].items[].slug`) and validates each item against budget + listing availability before render. The **BML Swipe integration** wraps `POST /api/v1/payments` and `POST /api/v1/payouts` with an internal escrow ledger; status flips are driven by webhook delivery from Swipe (or the local Swipe CLI mock for offline demos). See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) for the full diagram.
+A Laravel 13 monolith + SQLite (or Postgres in production) backs three roles: tourists, providers, and admins, distinguished by a `role` column on `users`. The marketplace surface is server-rendered Blade + Livewire components with Tailwind. The **AI Concierge** is a Livewire chat component that calls the Anthropic Messages API with a dynamic system prompt built from the signed-in tourist's trip context + a fresh snapshot of all active listings on their current island; Claude can only recommend by slug, and recommendations are hydrated against the listing table so hallucinations are structurally prevented. The **AI Planner** uses the same pattern but enforces a strict JSON schema (`days[].items[].slug`) and validates each item against budget + listing availability before render. The **BML Swipe integration** wraps `POST /api/v1/payments` and `POST /api/v1/payouts` with an internal escrow ledger; status flips are driven by webhook delivery from Swipe (or the local Swipe CLI mock for offline demos).
+
+> *Product strategy, PRD, and detailed architecture diagrams are maintained in a private team repo for ongoing product work — this public repo carries the implementation that won 2nd at Co.Lab 26.*
 
 ## Compliance notes
 
