@@ -44,12 +44,12 @@
 
         <aside class="lg:col-span-2 lg:sticky lg:top-20 self-start space-y-4">
             <x-ui.card class="p-5">
-                <div class="text-3xl font-bold text-madi-700">MVR {{ number_format($listing->price_mvr, 2) }}</div>
-                <div class="text-sm text-muraka-500">≈ USD {{ number_format($listing->price_usd, 2) }}</div>
+                <x-ui.price :usd="$listing->price_usd" :mvr="$listing->price_mvr" size="lg" />
 
                 <div class="text-xs text-muraka-500 mt-2 space-y-0.5">
-                    <div class="flex justify-between"><span>Base price</span><span>MVR {{ number_format($listing->price_mvr / 1.16, 2) }}</span></div>
-                    <div class="flex justify-between"><span>TGST (16%)</span><span>MVR {{ number_format($listing->price_mvr - ($listing->price_mvr / 1.16), 2) }}</span></div>
+                    <div class="flex justify-between"><span>Base (excl. TGST)</span><span>${{ number_format($listing->price_usd / 1.16, 2) }}</span></div>
+                    <div class="flex justify-between"><span>TGST (16%)</span><span>${{ number_format($listing->price_usd - ($listing->price_usd / 1.16), 2) }}</span></div>
+                    <div class="flex justify-between text-muraka-400"><span>Settles in MVR</span><span>≈ {{ number_format($listing->price_mvr, 0) }} total</span></div>
                 </div>
 
                 <div class="mt-5">
@@ -77,7 +77,7 @@
 
                 <div class="text-[11px] text-muraka-500 mt-3 text-center flex items-center justify-center gap-1">
                     <x-icons.icon name="credit-card" class="w-3.5 h-3.5" />
-                    Pay via <span class="font-mono text-madi-700">BML Swipe</span>.
+                    Charged in MVR via <span class="font-mono text-madi-700">BML Swipe</span> · USD estimate shown.
                 </div>
             </x-ui.card>
 

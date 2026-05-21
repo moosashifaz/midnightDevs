@@ -82,10 +82,18 @@
         <aside class="lg:col-span-2 space-y-4">
             <x-ui.card class="p-5">
                 <h2 class="font-semibold mb-3">Payment</h2>
+                @php
+                    $paidUsd = (float) $order->amount_usd;
+                    $tgstUsd = $order->payment?->tgst_amount
+                        ? round((float) $order->payment->tgst_amount / 15.42, 2)
+                        : round($paidUsd - ($paidUsd / 1.16), 2);
+                    $baseUsd = round($paidUsd - $tgstUsd, 2);
+                @endphp
                 <dl class="text-sm space-y-1.5">
-                    <div class="flex justify-between"><dt class="text-muraka-500">Base</dt><dd>MVR {{ number_format($order->payment?->amount_mvr - $order->payment?->tgst_amount, 2) }}</dd></div>
-                    <div class="flex justify-between"><dt class="text-muraka-500">TGST</dt><dd>MVR {{ number_format($order->payment?->tgst_amount ?? 0, 2) }}</dd></div>
-                    <div class="flex justify-between font-semibold border-t border-moodhu-200 pt-2 mt-2"><dt>Total paid</dt><dd class="text-madi-700">MVR {{ number_format($order->amount_mvr, 2) }}</dd></div>
+                    <div class="flex justify-between"><dt class="text-muraka-500">Base</dt><dd>${{ number_format($baseUsd, 2) }}</dd></div>
+                    <div class="flex justify-between"><dt class="text-muraka-500">TGST</dt><dd>${{ number_format($tgstUsd, 2) }}</dd></div>
+                    <div class="flex justify-between font-semibold border-t border-moodhu-200 pt-2 mt-2"><dt>Total paid</dt><dd class="text-madi-700">${{ number_format($paidUsd, 2) }}</dd></div>
+                    <div class="flex justify-between text-xs text-muraka-500"><dt>Swipe receipt</dt><dd>MVR {{ number_format($order->amount_mvr, 2) }}</dd></div>
                 </dl>
             </x-ui.card>
 

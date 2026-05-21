@@ -6,6 +6,7 @@ use App\Models\Island;
 use App\Models\Listing;
 use App\Models\User;
 use App\Services\Anthropic\Client;
+use App\Services\Planner\PlanInterests;
 use App\Services\Planner\PlanResult;
 use Illuminate\Support\Facades\Log;
 
@@ -17,23 +18,29 @@ class AIPlannerService
     ) {
     }
 
-    public function generate(?Island $island, float $budgetUsd, int $days, ?User $user = null): PlanResult
-    {
+    public function generate(
+        ?Island $island,
+        float $budgetUsd,
+        int $days,
+        ?User $user = null,
+        ?PlanInterests $interests = null,
+    ): PlanResult {
         $days = max(1, min(7, $days));
         $budgetUsd = max(100, $budgetUsd);
+        $interests ??= PlanInterests::all();
 
         if (! $island) {
-            return $this->samplePlans->forIsland(null, $budgetUsd, $days);
+            return $this->samplePlans->forIsland(null, $budgetUsd, $days, $interests);
         }
 
         if (! $this->client->isAvailable()) {
-            return $this->samplePlans->forIsland($island, $budgetUsd, $days);
+            return $this->samplePlans->forIsland($island, $budgetUsd, $days, $interests);
         }
 
         try {
-            $parsed = $this->requestPlanJson($island, $budgetUsd, $days, $user);
+            $parsed = $this->requestPlanJson($island, $budgetUsd, $days, $user, $interests);
             if ($parsed) {
-                return $this->hydratePlan($island, $budgetUsd, $days, $parsed);
+                return $this->hydratePlan($island, $budgetUsd, $days, $parsed, $interests);
             }
         } catch (\Throwable $e) {
             Log::error('ai.planner.exception', [
@@ -42,20 +49,22 @@ class AIPlannerService
             ]);
         }
 
-        return $this->samplePlans->forIsland($island, $budgetUsd, $days);
+        return $this->samplePlans->forIsland($island, $budgetUsd, $days, $interests);
     }
 
     /**
      * @return array{days: array<int, array<string, mixed>>, summary?: string}|null
      */
-    protected function requestPlanJson(Island $island, float $budgetUsd, int $days, ?User $user): ?array
+    protected function requestPlanJson(Island $island, float $budgetUsd, int $days, ?User $user, PlanInterests $interests): ?array
     {
-        $listings = Listing::with('provider')
-            ->where('island_id', $island->id)
-            ->where('is_active', true)
-            ->orderBy('category')
-            ->orderByDesc('rating')
-            ->get();
+        $listings = $interests->filterListings(
+            Listing::with('provider')
+                ->where('island_id', $island->id)
+                ->where('is_active', true)
+                ->orderBy('category')
+                ->orderByDesc('rating')
+                ->get(),
+        );
 
         if ($listings->isEmpty()) {
             return null;
@@ -74,6 +83,10 @@ class AIPlannerService
             ? 'Traveler: '.explode(' ', $user->name)[0]
             : 'Traveler: guest';
 
+        $focusLine = $interests->promptFocusLine();
+        $excludeLine = $interests->promptExclusionLine();
+        $excludeBlock = $excludeLine !== '' ? "\n- {$excludeLine}" : '';
+
         $system = <<<PROMPT
 You are AfterArrival's island trip planner. Build a multi-day itinerary using ONLY listings provided below.
 
@@ -83,14 +96,17 @@ Rules:
 - Use only slugs from the listing list. Never invent slugs.
 - Total USD of all items must not exceed {$budgetUsd}.
 - Exactly {$days} day objects, day numbers 1..{$days}.
-- Mix **Taste** (food), **Refresh** (laundry/wellness), **Shop** (pickup souvenirs), and **Explore** (experiences) across the trip (1-3 items per day).
+- {$focusLine}{$excludeBlock}
 - Notes are short (e.g. "Dinner", "Morning snorkel").
 PROMPT;
+
+        $prefsLine = 'Traveler activity interests: '.implode(', ', $interests->labels());
 
         $userMessage = <<<MSG
 Island: {$island->name}
 Budget: USD {$budgetUsd} for {$days} days
 {$userLine}
+{$prefsLine}
 
 Listings:
 {$listingLines}
@@ -115,13 +131,14 @@ MSG;
     /**
      * @param  array{days: array<int, array<string, mixed>>, summary?: string}  $payload
      */
-    protected function hydratePlan(Island $island, float $budgetUsd, int $days, array $payload): PlanResult
+    protected function hydratePlan(Island $island, float $budgetUsd, int $days, array $payload, PlanInterests $interests): PlanResult
     {
-        $bySlug = Listing::with('provider')
-            ->where('island_id', $island->id)
-            ->where('is_active', true)
-            ->get()
-            ->keyBy('slug');
+        $bySlug = $interests->filterListings(
+            Listing::with('provider')
+                ->where('island_id', $island->id)
+                ->where('is_active', true)
+                ->get(),
+        )->keyBy('slug');
 
         $spent = 0.0;
         $planDays = [];
@@ -155,7 +172,7 @@ MSG;
         }
 
         if (empty($planDays)) {
-            return $this->samplePlans->forIsland($island, $budgetUsd, $days);
+            return $this->samplePlans->forIsland($island, $budgetUsd, $days, $interests);
         }
 
         return new PlanResult(

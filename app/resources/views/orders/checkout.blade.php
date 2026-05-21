@@ -42,8 +42,7 @@
                         <div class="text-xs text-muraka-500">{{ $listing->provider->business_name }}</div>
                     </div>
                     <div class="text-right shrink-0">
-                        <div class="font-bold text-madi-700">MVR {{ number_format($listing->price_mvr, 2) }}</div>
-                        <div class="text-[11px] text-muraka-500">≈ USD {{ number_format($listing->price_usd, 2) }}</div>
+                        <x-ui.price :usd="$listing->price_usd" :mvr="$listing->price_mvr" size="sm" />
                     </div>
                 </div>
             </x-ui.card>
@@ -79,20 +78,21 @@
             </x-ui.card>
 
             <button type="submit" class="btn-primary w-full py-4 text-lg">
-                Pay MVR {{ number_format($listing->price_mvr, 2) }} via Swipe
+                Pay ${{ number_format($listing->price_usd, 2) }} via Swipe
             </button>
+            <p class="text-center text-[11px] text-muraka-500 -mt-2">Charged ≈ MVR {{ number_format($listing->price_mvr, 0) }} on BML Swipe</p>
         </form>
 
         <aside class="lg:col-span-2 self-start">
             <x-ui.card class="p-5 sticky top-20">
                 <h3 class="font-semibold mb-3">Total breakdown</h3>
                 <dl class="text-sm space-y-1.5">
-                    <div class="flex justify-between"><dt class="text-muraka-500">Base price</dt><dd>MVR {{ number_format($listing->price_mvr / 1.16, 2) }}</dd></div>
-                    <div class="flex justify-between"><dt class="text-muraka-500">TGST (16%)</dt><dd>MVR {{ number_format($listing->price_mvr - ($listing->price_mvr / 1.16), 2) }}</dd></div>
-                    <div class="flex justify-between border-t border-moodhu-200 pt-2 mt-2 font-bold"><dt>Total</dt><dd class="text-madi-700">MVR {{ number_format($listing->price_mvr, 2) }}</dd></div>
-                    <div class="flex justify-between text-xs text-muraka-500"><dt>In USD</dt><dd>≈ ${{ number_format($listing->price_usd, 2) }}</dd></div>
+                    <div class="flex justify-between"><dt class="text-muraka-500">Base price</dt><dd>${{ number_format($listing->price_usd / 1.16, 2) }}</dd></div>
+                    <div class="flex justify-between"><dt class="text-muraka-500">TGST (16%)</dt><dd>${{ number_format($listing->price_usd - ($listing->price_usd / 1.16), 2) }}</dd></div>
+                    <div class="flex justify-between border-t border-moodhu-200 pt-2 mt-2 font-bold"><dt>Total</dt><dd class="text-madi-700">${{ number_format($listing->price_usd, 2) }}</dd></div>
+                    <div class="flex justify-between text-xs text-muraka-500"><dt>Swipe charge</dt><dd>≈ MVR {{ number_format($listing->price_mvr, 0) }}</dd></div>
                 </dl>
-                <p class="text-[11px] text-muraka-500 mt-4">FX from Central Bank of Maldives reference. No platform fee at checkout.</p>
+                <p class="text-[11px] text-muraka-500 mt-4">USD estimate for travelers. Settlement is in MVR via BML Swipe.</p>
             </x-ui.card>
         </aside>
     </div>

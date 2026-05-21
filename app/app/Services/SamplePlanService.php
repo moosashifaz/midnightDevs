@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Island;
 use App\Models\Listing;
+use App\Services\Planner\PlanInterests;
 use App\Services\Planner\PlanResult;
 
 class SamplePlanService
@@ -25,24 +26,38 @@ class SamplePlanService
         'experience' => 'Experience',
     ];
 
-    public function forIsland(?Island $island, float $budgetUsd = 2000, int $days = 5): PlanResult
-    {
+    public function forIsland(
+        ?Island $island,
+        float $budgetUsd = 2000,
+        int $days = 5,
+        ?PlanInterests $interests = null,
+    ): PlanResult {
         $days = max(1, min(7, $days));
         $budgetUsd = max(100, $budgetUsd);
+        $interests ??= PlanInterests::all();
 
         if (! $island) {
             return $this->emptyPlan($budgetUsd, $days);
         }
 
-        $pool = Listing::query()
-            ->with('provider')
-            ->where('island_id', $island->id)
-            ->where('is_active', true)
-            ->orderByDesc('rating')
-            ->get();
+        $pool = $interests->filterListings(
+            Listing::query()
+                ->with('provider')
+                ->where('island_id', $island->id)
+                ->where('is_active', true)
+                ->orderByDesc('rating')
+                ->get(),
+        );
 
         if ($pool->isEmpty()) {
-            return $this->emptyPlan($budgetUsd, $days);
+            return new PlanResult(
+                budgetUsd: $budgetUsd,
+                dayCount: $days,
+                spentUsd: 0,
+                summary: 'No listings on this island match your selected activities yet — try adding more interests or browse the marketplace.',
+                planDays: [],
+                isSample: true,
+            );
         }
 
         $targetSpend = $budgetUsd * 0.72;
@@ -53,7 +68,7 @@ class SamplePlanService
 
         for ($d = 1; $d <= $days; $d++) {
             $items = [];
-            $categoriesThisDay = $this->categoriesForDay($d, $days);
+            $categoriesThisDay = $this->categoriesForDay($d, $days, $interests);
 
             foreach ($categoriesThisDay as $category) {
                 if ($spent >= $targetSpend) {
@@ -102,11 +117,13 @@ class SamplePlanService
 
         $islandName = $island->name;
 
+        $focus = implode(', ', $interests->labels());
+
         return new PlanResult(
             budgetUsd: $budgetUsd,
             dayCount: $days,
             spentUsd: round($spent, 2),
-            summary: "A {$days}-day sample on {$islandName} — food, laundry, souvenirs, and experiences from verified local providers.",
+            summary: "A {$days}-day sample on {$islandName} — {$focus} from verified local providers.",
             planDays: $planDays,
             isSample: true,
         );
@@ -115,10 +132,9 @@ class SamplePlanService
     /**
      * @return list<string>
      */
-    protected function categoriesForDay(int $day, int $totalDays): array
+    protected function categoriesForDay(int $day, int $totalDays, PlanInterests $interests): array
     {
         $rotation = ['experience', 'eat', 'wash', 'buy', 'eat', 'experience', 'buy'];
-        $categories = [];
 
         if ($day === 1) {
             $categories = ['eat', 'wash'];

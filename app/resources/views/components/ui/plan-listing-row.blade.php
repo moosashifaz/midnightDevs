@@ -40,8 +40,7 @@
                 </a>
             </div>
             <div class="text-right shrink-0">
-                <div class="text-sm font-bold text-madi-700">${{ number_format($priceUsd, 0) }}</div>
-                <div class="text-[10px] text-muraka-500">MVR {{ number_format($priceMvr, 0) }}</div>
+                <x-ui.price :usd="$priceUsd" :mvr="$priceMvr" size="sm" />
             </div>
         </div>
     </div>

@@ -24,8 +24,8 @@ class AIChat extends Component
      * Quick-ask suggestions shown above the input on the first turn.
      */
     public array $suggestions = [
-        'Best dinner under MVR 200?',
-        'Is MVR 80 a fair laundry price?',
+        'Best dinner under $15?',
+        'Is $5 a fair laundry price?',
         'What can I do for 3 hours this afternoon?',
         'Mosque visit dress code?',
     ];
@@ -145,11 +145,11 @@ class AIChat extends Component
         }
 
         $question = sprintf(
-            "Tell me about **%s** by %s — is the price (MVR %s ≈ USD %s) fair, and would you recommend it for someone on %s? What should I know before ordering?",
+            "Tell me about **%s** by %s — is the price ($%s, ≈ MVR %s) fair, and would you recommend it for someone on %s? What should I know before ordering?",
             $listing->title,
             $listing->provider->business_name ?? 'this provider',
-            number_format((float) $listing->price_mvr, 0),
             number_format((float) $listing->price_usd, 2),
+            number_format((float) $listing->price_mvr, 0),
             $listing->island->name ?? 'this island',
         );
 

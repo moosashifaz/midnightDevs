@@ -5,6 +5,7 @@ namespace App\Livewire;
 use App\Models\Island;
 use App\Models\SavedPlan;
 use App\Services\AIPlannerService;
+use App\Services\Planner\PlanInterests;
 use App\Services\Planner\PlanResult;
 use Illuminate\Http\Request;
 use Livewire\Attributes\Layout;
@@ -34,10 +35,14 @@ class PlanBuilder extends Component
 
     public ?string $islandName = null;
 
+    /** @var list<string> */
+    public array $interests = PlanInterests::ALL;
+
     public function mount(Request $request): void
     {
         $this->budgetUsd = max(100, (float) $request->query('budget', 2000));
         $this->days = max(1, min(7, (int) $request->query('days', 5)));
+        $this->interests = PlanInterests::fromQuery($request->query('interests'))->included;
 
         $island = $this->resolveIsland($request);
         $this->islandName = $island?->name;
@@ -90,10 +95,16 @@ class PlanBuilder extends Component
 
     public function generate(Request $request, AIPlannerService $planner): void
     {
+        $this->validate([
+            'interests' => ['required', 'array', 'min:1'],
+            'interests.*' => ['string', 'in:'.implode(',', PlanInterests::ALL)],
+        ]);
+
         if (! $request->user()) {
             session()->put('url.intended', route('plan', [
                 'budget' => $this->budgetUsd,
                 'days' => $this->days,
+                'interests' => PlanInterests::fromArray($this->interests)->toQueryString(),
                 'generate' => 1,
             ]));
 
@@ -114,7 +125,28 @@ class PlanBuilder extends Component
             return;
         }
 
-        $result = $planner->generate($island, $this->budgetUsd, $this->days, $request->user());
+        $prefs = PlanInterests::fromArray($this->interests);
+        $matchCount = $prefs->filterListings(
+            \App\Models\Listing::query()
+                ->where('island_id', $island->id)
+                ->where('is_active', true)
+                ->get(),
+        )->count();
+
+        if ($matchCount === 0) {
+            $this->error = 'No listings match your selected activities on this island. Try ticking more interests.';
+            $this->isGenerating = false;
+
+            return;
+        }
+
+        $result = $planner->generate(
+            $island,
+            $this->budgetUsd,
+            $this->days,
+            $request->user(),
+            $prefs,
+        );
         $this->applyPlan($result);
         $this->hasPlan = true;
         $this->isGenerating = false;

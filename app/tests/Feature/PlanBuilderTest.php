@@ -24,7 +24,12 @@ test('sample plan service returns structured days within budget', function () {
 });
 
 test('guest with generate param is redirected to login', function () {
-    $this->get(route('plan', ['budget' => 1500, 'days' => 3, 'generate' => 1]))
+    $this->get(route('plan', [
+        'budget' => 1500,
+        'days' => 3,
+        'interests' => 'snorkeling,local-food',
+        'generate' => 1,
+    ]))
         ->assertRedirect(route('login'));
 });
 
@@ -46,5 +51,15 @@ test('home page shows ai planner teaser without pre-built itinerary', function (
         ->assertOk()
         ->assertSee('Plan your island stay')
         ->assertSee('Tap an amount to set your budget')
+        ->assertSee('What are you into?')
         ->assertDontSee('Example plan');
+});
+
+test('plan builder loads interests from query string', function () {
+    $user = User::factory()->create();
+
+    Livewire::actingAs($user)
+        ->withQueryParams(['interests' => 'snorkeling,dolphins', 'budget' => 1000, 'days' => 3])
+        ->test(PlanBuilder::class)
+        ->assertSet('interests', ['snorkeling', 'dolphins']);
 });

@@ -113,11 +113,11 @@ class AIAgentService
                         $lines[] = "\n### {$catLabel}";
                         foreach ($items as $listing) {
                             $lines[] = sprintf(
-                                '- **%s** by %s — MVR %s (~USD %s) · ★ %s · %s',
+                                '- **%s** by %s — USD %s (≈ MVR %s) · ★ %s · %s',
                                 $listing->title,
                                 $listing->provider->business_name ?? 'Unknown provider',
-                                number_format((float) $listing->price_mvr, 0),
                                 number_format((float) $listing->price_usd, 2),
+                                number_format((float) $listing->price_mvr, 0),
                                 number_format((float) $listing->rating, 1),
                                 $listing->lead_time_minutes > 0
                                     ? "{$listing->lead_time_minutes}min lead time"
@@ -145,7 +145,7 @@ You are AfterArrival's local concierge — a warm, knowledgeable AI guide inside
 ## How you respond
 - Warm, helpful, **concise** by default. 1–3 short paragraphs unless detailed advice is genuinely needed.
 - Use Markdown sparingly — bullet points and **bold** for prices and names work well.
-- Always cite prices in **both MVR and USD** (rough conversion: 1 USD ≈ 15.4 MVR).
+- Always cite prices **USD first**, then MVR in parentheses (1 USD ≈ 15.4 MVR). Tourists think in dollars.
 - Be opinionated when asked for a recommendation. Say what *you'd* do, not just options.
 - When discussing a price, say whether it's typical / above / below the local Maldives range, and give the rough range.
 - Use the user's first name occasionally when it fits naturally — never in every sentence.
@@ -226,7 +226,7 @@ PROMPT;
                 return $this->response("I don't have food listings cached for your island yet. Try opening the **Taste** tab.");
             }
 
-            $bullets = $listings->map(fn ($l) => sprintf('• %s — MVR %s', $l->title, $l->price_mvr))->implode("\n");
+            $bullets = $listings->map(fn ($l) => sprintf('• %s — $%s (≈ MVR %s)', $l->title, number_format((float) $l->price_usd, 2), number_format((float) $l->price_mvr, 0)))->implode("\n");
 
             return $this->response("Here are a few well-rated food options:\n\n{$bullets}\n\nWant more details on any of these?");
         }

@@ -102,6 +102,30 @@
         @apply planner-chip ring-2 ring-madi-400 bg-white text-madi-800;
     }
 
+    .planner-interest {
+        @apply flex items-start gap-3 rounded-2xl border border-moodhu-200 bg-white px-3 py-2.5 transition-all duration-150 hover:border-madi-200 hover:shadow-sm;
+    }
+
+    .planner-interest-active {
+        @apply border-madi-300 bg-madi-50/50 ring-2 ring-madi-200;
+    }
+
+    .planner-interest-check {
+        @apply mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-md border-2 border-moodhu-300 bg-white text-white;
+    }
+
+    .planner-interest-active .planner-interest-check {
+        @apply border-madi-500 bg-madi-500;
+    }
+
+    .planner-settings-panel summary {
+        list-style: none;
+    }
+
+    .planner-settings-panel summary::-webkit-details-marker {
+        display: none;
+    }
+
     .planner-range {
         @apply h-2 w-full cursor-pointer appearance-none rounded-full bg-moodhu-200;
     }
