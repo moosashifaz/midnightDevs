@@ -1,6 +1,7 @@
 <div>
     @if(!$otpSent)
-        <form wire:submit.prevent="sendOtp" class="space-y-4">
+        <form wire:submit.prevent="sendOtp" method="POST" class="space-y-4">
+            @csrf
             <div class="flex gap-2 mb-4">
                 <button 
                     type="button" 
@@ -27,21 +28,24 @@
                     wire:model="identifier"
                     placeholder="{{ $type === 'email' ? 'you@example.com' : '+960 XXXXXXX' }}"
                     class="input-field w-full"
-                    :disabled="$loading"
+                    wire:loading.attr="disabled"
+                    @disabled($loading)
                 />
                 @error('identifier') <span class="text-red-600 text-xs mt-1">{{ $message }}</span> @enderror
             </div>
 
             <button 
                 type="submit"
-                :disabled="$loading"
+                wire:loading.attr="disabled"
+                @disabled($loading)
                 class="btn-primary w-full py-3 {{ $loading ? 'opacity-50 cursor-not-allowed' : '' }}"
             >
                 {{ $loading ? 'Sending...' : 'Send Verification Code' }}
             </button>
         </form>
     @else
-        <form wire:submit.prevent="verifyOtp" class="space-y-4">
+        <form wire:submit.prevent="verifyOtp" method="POST" class="space-y-4">
+            @csrf
             <div class="bg-madi-50 border border-madi-200 rounded-lg p-4">
                 <p class="text-sm text-madi-800">
                     <x-icons.icon name="check-circle" class="w-4 h-4 inline mr-1" />
@@ -57,14 +61,16 @@
                     placeholder="123456"
                     maxlength="6"
                     class="input-field w-full text-center text-2xl tracking-widest"
-                    :disabled="$loading"
+                    wire:loading.attr="disabled"
+                    @disabled($loading)
                 />
                 @error('otp') <span class="text-red-600 text-xs mt-1">{{ $message }}</span> @enderror
             </div>
 
             <button 
                 type="submit"
-                :disabled="$loading"
+                wire:loading.attr="disabled"
+                @disabled($loading)
                 class="btn-primary w-full py-3 {{ $loading ? 'opacity-50 cursor-not-allowed' : '' }}"
             >
                 {{ $loading ? 'Verifying...' : 'Verify & Continue' }}
@@ -74,7 +80,8 @@
                 <button 
                     type="button"
                     wire:click.prevent="resendOtp"
-                    :disabled="$loading"
+                    wire:loading.attr="disabled"
+                    @disabled($loading)
                     class="text-sm text-madi-600 hover:text-madi-700 font-medium {{ $loading ? 'opacity-50 cursor-not-allowed' : '' }}"
                 >
                     Resend Code
@@ -83,7 +90,8 @@
                 <button 
                     type="button"
                     wire:click.prevent="resetForm"
-                    :disabled="$loading"
+                    wire:loading.attr="disabled"
+                    @disabled($loading)
                     class="text-sm text-muraka-600 hover:text-muraka-700 font-medium {{ $loading ? 'opacity-50 cursor-not-allowed' : '' }}"
                 >
                     Change {{ $type === 'email' ? 'Email' : 'Phone' }}

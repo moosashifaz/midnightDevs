@@ -49,22 +49,39 @@ class MarketplaceController extends Controller
             abort(404);
         }
 
-        $island = $this->currentIsland($request);
+        $currentIsland = $this->currentIsland($request);
+        $selectedIsland = $request->query('island');
+        $selectedRating = $request->integer('rating') ?: null;
+        $selectedLeadTime = $request->integer('lead_time') ?: null;
+        $selectedSort = $request->query('sort');
 
         $listings = Listing::query()
             ->with(['provider', 'island'])
             ->where('category', $category)
             ->where('is_active', true)
-            ->when($island, fn ($q) => $q->where('island_id', $island->id))
-            ->orderByDesc('rating')
-            ->paginate(12);
+            ->when($selectedIsland, fn ($q) => $q->whereHas('island', fn ($q) => $q->where('slug', $selectedIsland)))
+            ->when($selectedRating, fn ($q) => $q->where('rating', '>=', $selectedRating))
+            ->when($selectedLeadTime, fn ($q) => $q->where('lead_time_minutes', '<=', $selectedLeadTime))
+            ->when($selectedSort === 'price_asc', fn ($q) => $q->orderBy('price_mvr', 'asc'))
+            ->when($selectedSort === 'price_desc', fn ($q) => $q->orderBy('price_mvr', 'desc'))
+            ->when($selectedSort === 'lead_time_asc', fn ($q) => $q->orderBy('lead_time_minutes', 'asc'))
+            ->when($selectedSort === 'lead_time_desc', fn ($q) => $q->orderBy('lead_time_minutes', 'desc'))
+            ->when($selectedSort === 'rating_asc', fn ($q) => $q->orderBy('rating', 'asc'))
+            ->when($selectedSort === 'rating_desc' || !$selectedSort, fn ($q) => $q->orderByDesc('rating'))
+            ->paginate(12)
+            ->withQueryString();
 
         return view('marketplace.category', [
             'category' => $category,
             'label' => Listing::CATEGORIES[$category],
             'description' => Listing::CATEGORY_SUBLABELS[$category] ?? null,
-            'island' => $island,
+            'island' => $currentIsland,
+            'islands' => Island::orderBy('name')->get(),
             'listings' => $listings,
+            'selectedIsland' => $selectedIsland,
+            'selectedRating' => $selectedRating,
+            'selectedLeadTime' => $selectedLeadTime,
+            'selectedSort' => $selectedSort,
         ]);
     }
 
