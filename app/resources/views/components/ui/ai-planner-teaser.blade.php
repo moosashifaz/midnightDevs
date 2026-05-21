@@ -5,6 +5,7 @@
 @php
     $budgetOptions = [500, 2000, 5000];
     $dayOptions = [3, 5, 7];
+    $planPath = parse_url(route('plan'), PHP_URL_PATH) ?: '/plan';
 @endphp
 
 <section
@@ -14,21 +15,31 @@
         budgetChosen: false,
         budget: null,
         days: 5,
+        planPath: '{{ $planPath }}',
+        interests: {
+            @foreach(\App\Services\Planner\PlanInterests::ALL as $interestKey)
+            '{{ $interestKey }}': true,
+            @endforeach
+        },
         pickBudget(amount) {
             this.budget = amount;
             this.budgetChosen = true;
+        },
+        selectedInterests() {
+            return Object.keys(this.interests).filter((k) => this.interests[k]);
         },
         isBuilding: false,
         planUrl() {
             const params = new URLSearchParams({
                 budget: this.budget,
                 days: this.days,
+                interests: this.selectedInterests().join(','),
                 generate: '1',
             });
-            return '{{ route('plan') }}?' + params.toString();
+            return this.planPath + '?' + params.toString();
         },
         buildPlan() {
-            if (this.isBuilding || this.budget === null) {
+            if (this.isBuilding || this.budget === null || this.selectedInterests().length === 0) {
                 return;
             }
             this.isBuilding = true;
@@ -42,7 +53,7 @@
     <p class="section-eyebrow mb-1">AI-powered</p>
     <h2 id="ai-planner-heading" class="section-title mb-1">Plan your island stay</h2>
     <p class="text-sm text-muraka-600 mb-5 max-w-xl">
-        Food, laundry, souvenirs &amp; experiences — matched to your budget on {{ $island?->name ?? 'your island' }}.
+        Snorkeling, food, crafts, dolphin trips &amp; more — matched to what you tick and your budget on {{ $island?->name ?? 'your island' }}.
     </p>
 
     {{-- Step 1: pick a budget (always visible) --}}
@@ -92,7 +103,7 @@
             <button
                 type="button"
                 @click="buildPlan()"
-                :disabled="isBuilding"
+                :disabled="isBuilding || selectedInterests().length === 0"
                 class="btn-primary shrink-0 self-stretch lg:self-center py-4 px-8 text-base sm:text-lg font-bold shadow-md hover:shadow-lg lg:min-w-[11rem] flex items-center justify-center gap-2 disabled:opacity-80 disabled:cursor-wait"
                 :aria-busy="isBuilding"
             >
@@ -108,6 +119,8 @@
         </div>
 
         <x-ui.budget-slider id="home-budget-slider" />
+
+        <x-ui.planner-interests alpine />
 
         <div class="flex flex-wrap gap-2">
             <span class="text-[10px] uppercase tracking-label text-muraka-500 w-full sm:w-auto sm:mr-1 self-center">Days</span>

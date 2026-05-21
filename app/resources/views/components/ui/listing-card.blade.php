@@ -37,10 +37,7 @@ $url = $href ?? route('listing', $listing);
             {{ $slot }}
         @endif
         <div class="flex items-end justify-between mt-2">
-            <div>
-                <div class="text-lg font-bold text-madi-700">MVR {{ number_format($listing->price_mvr, 0) }}</div>
-                <div class="text-[11px] text-muraka-500">≈ USD {{ number_format($listing->price_usd, 2) }}</div>
-            </div>
+            <x-ui.price :usd="$listing->price_usd" :mvr="$listing->price_mvr" />
             @if($listing->lead_time_minutes > 0)
                 <x-ui.badge variant="lead">{{ $listing->lead_time_minutes }}m lead</x-ui.badge>
             @else

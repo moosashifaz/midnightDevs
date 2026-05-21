@@ -20,7 +20,7 @@
                             <div class="text-xs text-muraka-500">{{ $order->provider->business_name }} · {{ $order->created_at->diffForHumans() }}</div>
                         </div>
                         <div class="text-right shrink-0">
-                            <div class="font-bold text-madi-700">MVR {{ number_format($order->amount_mvr, 2) }}</div>
+                            <x-ui.price :usd="$order->amount_usd" :mvr="$order->amount_mvr" size="sm" />
                             @php
                                 $statusClass = match($order->status) {
                                     'completed' => 'bg-ruh-100 text-ruh-800',

@@ -3,6 +3,16 @@
 @tailwind utilities;
 
 @layer base {
+    :root {
+        --site-header-height: 3.5rem;
+    }
+
+    @media (min-width: 640px) {
+        :root {
+            --site-header-height: 4.5rem;
+        }
+    }
+
     html {
         color-scheme: light;
     }
@@ -102,6 +112,30 @@
         @apply planner-chip ring-2 ring-madi-400 bg-white text-madi-800;
     }
 
+    .planner-interest {
+        @apply flex items-start gap-3 rounded-2xl border border-moodhu-200 bg-white px-3 py-2.5 transition-all duration-150 hover:border-madi-200 hover:shadow-sm;
+    }
+
+    .planner-interest-active {
+        @apply border-madi-300 bg-madi-50/50 ring-2 ring-madi-200;
+    }
+
+    .planner-interest-check {
+        @apply mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-md border-2 border-moodhu-300 bg-white text-white;
+    }
+
+    .planner-interest-active .planner-interest-check {
+        @apply border-madi-500 bg-madi-500;
+    }
+
+    .planner-settings-panel summary {
+        list-style: none;
+    }
+
+    .planner-settings-panel summary::-webkit-details-marker {
+        display: none;
+    }
+
     .planner-range {
         @apply h-2 w-full cursor-pointer appearance-none rounded-full bg-moodhu-200;
     }
@@ -133,6 +167,35 @@
         }
     }
 
+    .plan-swap-bar {
+        @apply rounded-xl border border-madi-200 bg-gradient-to-r from-madi-50/60 via-white to-moodhu-50/80 p-3;
+    }
+
+    .plan-swap-bar-track {
+        scrollbar-width: thin;
+        scrollbar-color: rgb(89 153 207 / 0.45) transparent;
+    }
+
+    .plan-swap-bar-track::-webkit-scrollbar {
+        height: 6px;
+    }
+
+    .plan-swap-bar-track::-webkit-scrollbar-thumb {
+        border-radius: 9999px;
+        background: rgb(89 153 207 / 0.45);
+    }
+
+    .plan-swap-bar-card {
+        width: 8.5rem;
+        min-height: 8.75rem;
+    }
+
+    @media (min-width: 640px) {
+        .plan-swap-bar-card {
+            width: 9.5rem;
+        }
+    }
+
     .planner-timeline-day {
         @apply relative pl-8 pb-8 last:pb-0;
     }
@@ -159,9 +222,161 @@
         @apply inline-block h-5 w-5 rounded-full border-2 border-madi-200 border-t-madi-600 animate-spin;
     }
 
+    .planner-building-overlay {
+        background: linear-gradient(
+            165deg,
+            rgb(184 230 212 / 0.92) 0%,
+            rgb(255 255 255 / 0.96) 45%,
+            rgb(89 153 207 / 0.12) 100%
+        );
+        backdrop-filter: blur(8px);
+    }
+
+    .planner-building-panel {
+        animation: planner-panel-in 0.45s ease-out both;
+    }
+
+    .brand-lottie svg {
+        width: 100% !important;
+        height: 100% !important;
+    }
+
+    .site-header {
+        overflow: visible;
+    }
+
+    .site-header-inner {
+        min-height: var(--site-header-height);
+    }
+
+    /* Logo renders larger than the bar; negative margin keeps the header compact */
+    .header-brand-lottie {
+        width: 8rem !important;
+        height: 8rem !important;
+        margin-block: -2.25rem;
+    }
+
+    @media (min-width: 640px) {
+        .header-brand-lottie {
+            width: 10rem !important;
+            height: 10rem !important;
+            margin-block: -2.75rem;
+        }
+    }
+
+    .planner-lottie-player {
+        width: 100px;
+        height: 100px;
+    }
+
+    .planner-lottie-player svg {
+        width: 100% !important;
+        height: 100% !important;
+    }
+
+    @media (min-width: 640px) {
+        .planner-lottie-player {
+            width: 350px;
+            height: 350px;
+        }
+    }
+
+    .planner-building-glow {
+        @apply absolute left-1/2 top-6 -translate-x-1/2 rounded-full;
+        width: 120px;
+        height: 120px;
+        background: radial-gradient(circle, rgb(89 153 207 / 0.35) 0%, transparent 70%);
+        animation: planner-glow-pulse 2.5s ease-in-out infinite;
+    }
+
+    @media (min-width: 640px) {
+        .planner-building-glow {
+            width: 180px;
+            height: 180px;
+        }
+    }
+
+    .planner-building-step-active {
+        animation: planner-step-pulse 1.2s ease-in-out infinite;
+    }
+
+    .planner-message-fade {
+        animation: planner-message-in 0.5s ease-out;
+    }
+
+    .planner-skeleton-shimmer {
+        background: linear-gradient(
+            90deg,
+            theme('colors.moodhu.200') 0%,
+            theme('colors.moodhu.100') 40%,
+            theme('colors.moodhu.200') 80%
+        );
+        background-size: 200% 100%;
+        animation: planner-shimmer 1.6s ease-in-out infinite;
+    }
+
+    @keyframes planner-panel-in {
+        from {
+            opacity: 0;
+            transform: translateY(12px) scale(0.98);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+    }
+
+    @keyframes planner-glow-pulse {
+        0%, 100% {
+            opacity: 0.5;
+            transform: translateX(-50%) scale(1);
+        }
+        50% {
+            opacity: 1;
+            transform: translateX(-50%) scale(1.08);
+        }
+    }
+
+    @keyframes planner-step-pulse {
+        0%, 100% {
+            opacity: 1;
+        }
+        50% {
+            opacity: 0.75;
+        }
+    }
+
+    @keyframes planner-message-in {
+        from {
+            opacity: 0;
+            transform: translateY(4px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @keyframes planner-shimmer {
+        0% {
+            background-position: 200% 0;
+        }
+        100% {
+            background-position: -200% 0;
+        }
+    }
+
     @media (prefers-reduced-motion: reduce) {
         .planner-btn-spinner {
             @apply animate-none border-t-madi-600;
+        }
+
+        .planner-building-panel,
+        .planner-building-glow,
+        .planner-building-step-active,
+        .planner-message-fade,
+        .planner-skeleton-shimmer {
+            animation: none;
         }
     }
 

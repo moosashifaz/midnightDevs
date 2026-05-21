@@ -19,7 +19,7 @@ class Order extends Model
     public const STATUS_REFUNDED = 'refunded';
 
     protected $fillable = [
-        'reference', 'user_id', 'listing_id', 'provider_id', 'amount_mvr',
+        'reference', 'user_id', 'order_bundle_id', 'listing_id', 'provider_id', 'amount_mvr',
         'amount_usd', 'currency', 'status', 'voucher_code', 'scheduled_for',
         'fulfilled_at', 'completed_at', 'cancelled_at', 'cancellation_reason',
         'special_requests',
@@ -49,6 +49,11 @@ class Order extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function bundle(): BelongsTo
+    {
+        return $this->belongsTo(OrderBundle::class, 'order_bundle_id');
     }
 
     public function listing(): BelongsTo

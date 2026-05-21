@@ -20,7 +20,7 @@ class Payment extends Model
     public const ESCROW_REFUNDED = 'refunded';
 
     protected $fillable = [
-        'order_id', 'swipe_transaction_id', 'swipe_reference', 'swipe_short_code',
+        'order_id', 'order_bundle_id', 'swipe_transaction_id', 'swipe_reference', 'swipe_short_code',
         'payment_type', 'amount_mvr', 'currency', 'status', 'escrow_state',
         'charged_at', 'released_at', 'refunded_at',
         'platform_commission', 'provider_net', 'tgst_amount', 'swipe_payload',
@@ -40,5 +40,10 @@ class Payment extends Model
     public function order(): BelongsTo
     {
         return $this->belongsTo(Order::class);
+    }
+
+    public function orderBundle(): BelongsTo
+    {
+        return $this->belongsTo(OrderBundle::class);
     }
 }

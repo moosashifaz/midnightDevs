@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\MarketplaceController;
 use App\Http\Controllers\OrderController;
+use App\Http\Controllers\PlanCheckoutController;
 use App\Http\Controllers\ProviderDashboardController;
 use App\Http\Controllers\SavedPlanController;
 use App\Livewire\PlanBuilder;
@@ -21,6 +22,10 @@ Route::post('/checkout/{listing:slug}', [OrderController::class, 'store'])->name
 Route::middleware(['auth'])->group(function () {
     Route::get('/plans', [SavedPlanController::class, 'index'])->name('plans.index');
     Route::get('/plans/{savedPlan}', [SavedPlanController::class, 'show'])->name('plans.show');
+    Route::get('/plans/{savedPlan}/book-all', [PlanCheckoutController::class, 'bookAllFromSaved'])->name('plans.book-all');
+    Route::get('/plan/book-all', [PlanCheckoutController::class, 'bookAll'])->name('plan.book-all');
+    Route::post('/plan/book-all', [PlanCheckoutController::class, 'storeBookAll'])->name('plan.book-all.store');
+    Route::get('/orders/bundle/{bundle:reference}', [PlanCheckoutController::class, 'showBundle'])->name('orders.bundle.show');
 
     Route::get('/checkout/{listing:slug}', [OrderController::class, 'checkout'])->name('checkout');
     Route::post('/checkout/{listing:slug}', [OrderController::class, 'store'])->name('checkout.store');

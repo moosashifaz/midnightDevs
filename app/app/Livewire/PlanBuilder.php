@@ -3,10 +3,15 @@
 namespace App\Livewire;
 
 use App\Models\Island;
+use App\Models\Listing;
 use App\Models\SavedPlan;
 use App\Services\AIPlannerService;
+use App\Services\Planner\PlanGoogleCalendarUrl;
+use App\Services\Planner\PlanInterests;
+use App\Services\Planner\PlanItemAlternatives;
 use App\Services\Planner\PlanResult;
 use Illuminate\Http\Request;
+use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
@@ -34,13 +39,29 @@ class PlanBuilder extends Component
 
     public ?string $islandName = null;
 
+    /** @var list<string> */
+    public array $interests = PlanInterests::ALL;
+
+    public ?int $planIslandId = null;
+
+    public ?string $planMessage = null;
+
+    public ?int $swapBarDayIndex = null;
+
+    public ?int $swapBarItemIndex = null;
+
+    /** @var list<array{listing: array<string, mixed>, is_current: bool}> */
+    public array $swapBarOptions = [];
+
     public function mount(Request $request): void
     {
         $this->budgetUsd = max(100, (float) $request->query('budget', 2000));
         $this->days = max(1, min(7, (int) $request->query('days', 5)));
+        $this->interests = PlanInterests::fromQuery($request->query('interests'))->included;
 
         $island = $this->resolveIsland($request);
         $this->islandName = $island?->name;
+        $this->planIslandId = $island?->id;
 
         if ($request->boolean('generate')) {
             if (! $request->user()) {
@@ -88,12 +109,186 @@ class PlanBuilder extends Component
         session()->flash('status', 'Plan saved to My plans.');
     }
 
+    public function bookAll(): void
+    {
+        if (! $this->hasPlan) {
+            return;
+        }
+
+        $items = $this->planItemsForCheckout();
+
+        if ($items === []) {
+            $this->planMessage = 'Add activities to your plan before booking.';
+
+            return;
+        }
+
+        session([
+            'plan_book_all' => [
+                'island_name' => $this->islandName,
+                'summary' => $this->summary,
+                'spent_usd' => $this->spentUsd,
+                'items' => $items,
+                'return_url' => route('plan'),
+            ],
+        ]);
+
+        $this->redirect(route('plan.book-all'), navigate: true);
+    }
+
+    /**
+     * @return list<array{slug: string, title: string, note: string|null, day: int|null, price_usd: float, price_mvr: float}>
+     */
+    protected function planItemsForCheckout(): array
+    {
+        $items = [];
+
+        foreach ($this->planDays as $dayBlock) {
+            foreach ($dayBlock['items'] ?? [] as $item) {
+                $listing = $item['listing'] ?? [];
+                $slug = $listing['slug'] ?? null;
+
+                if (! $slug) {
+                    continue;
+                }
+
+                $items[] = [
+                    'slug' => (string) $slug,
+                    'title' => (string) ($listing['title'] ?? 'Listing'),
+                    'note' => isset($item['note']) ? (string) $item['note'] : null,
+                    'day' => isset($dayBlock['day']) ? (int) $dayBlock['day'] : null,
+                    'price_usd' => (float) ($listing['price_usd'] ?? 0),
+                    'price_mvr' => (float) ($listing['price_mvr'] ?? 0),
+                ];
+            }
+        }
+
+        return $items;
+    }
+
+    public function toggleSwapOptions(int $dayIndex, int $itemIndex): void
+    {
+        if ($this->swapBarDayIndex === $dayIndex && $this->swapBarItemIndex === $itemIndex) {
+            $this->closeSwapBar();
+
+            return;
+        }
+
+        if (! $this->hasPlan || ! isset($this->planDays[$dayIndex]['items'][$itemIndex])) {
+            return;
+        }
+
+        $island = $this->planIsland();
+        if (! $island) {
+            $this->planMessage = 'Select an island first, then regenerate your plan.';
+
+            return;
+        }
+
+        $options = app(PlanItemAlternatives::class)->optionsForSlot(
+            $island,
+            $this->planDays,
+            $dayIndex,
+            $itemIndex,
+            $this->budgetUsd,
+        );
+
+        if (count($options) <= 1) {
+            $this->planMessage = 'No other options in this category within your budget — try Remove or Regenerate.';
+
+            return;
+        }
+
+        $this->swapBarDayIndex = $dayIndex;
+        $this->swapBarItemIndex = $itemIndex;
+        $this->swapBarOptions = $options;
+        $this->planMessage = null;
+    }
+
+    public function closeSwapBar(): void
+    {
+        $this->swapBarDayIndex = null;
+        $this->swapBarItemIndex = null;
+        $this->swapBarOptions = [];
+    }
+
+    public function pickSwapOption(int $dayIndex, int $itemIndex, int $listingId): void
+    {
+        if ($this->swapBarDayIndex !== $dayIndex || $this->swapBarItemIndex !== $itemIndex) {
+            return;
+        }
+
+        $allowed = collect($this->swapBarOptions)
+            ->first(fn (array $option) => (int) ($option['listing']['id'] ?? 0) === $listingId);
+
+        if (! $allowed || ($allowed['is_current'] ?? false)) {
+            return;
+        }
+
+        $listing = Listing::query()->with('provider')->find($listingId);
+        if (! $listing) {
+            return;
+        }
+
+        $this->applyListingToSlot($dayIndex, $itemIndex, $listing);
+        $this->closeSwapBar();
+        $this->planMessage = 'Swapped to '.$listing->title.'.';
+    }
+
+    public function removePlanItem(int $dayIndex, int $itemIndex): void
+    {
+        if (! $this->hasPlan || ! isset($this->planDays[$dayIndex]['items'][$itemIndex])) {
+            return;
+        }
+
+        $planDays = $this->planDays;
+        $items = $planDays[$dayIndex]['items'];
+        array_splice($items, $itemIndex, 1);
+        $planDays[$dayIndex]['items'] = array_values($items);
+        $this->planDays = $planDays;
+
+        $this->recalculateSpent();
+        $this->closeSwapBar();
+        $this->planMessage = 'Removed from your plan.';
+    }
+
+    protected function applyListingToSlot(int $dayIndex, int $itemIndex, Listing $listing): void
+    {
+        $note = $this->planDays[$dayIndex]['items'][$itemIndex]['note'] ?? null;
+
+        $planDays = $this->planDays;
+        $planDays[$dayIndex]['items'][$itemIndex] = [
+            'listing' => PlanResult::listingSnapshot($listing),
+            'note' => $note,
+        ];
+        $this->planDays = $planDays;
+
+        $this->recalculateSpent();
+    }
+
+    #[Computed]
+    public function googleCalendarUrl(): string
+    {
+        return app(PlanGoogleCalendarUrl::class)->build(
+            islandName: $this->islandName ?? 'Maldives',
+            days: $this->days,
+            planDays: $this->planDays,
+            summary: $this->summary,
+        );
+    }
+
     public function generate(Request $request, AIPlannerService $planner): void
     {
+        $this->validate([
+            'interests' => ['required', 'array', 'min:1'],
+            'interests.*' => ['string', 'in:'.implode(',', PlanInterests::ALL)],
+        ]);
+
         if (! $request->user()) {
             session()->put('url.intended', route('plan', [
                 'budget' => $this->budgetUsd,
                 'days' => $this->days,
+                'interests' => PlanInterests::fromArray($this->interests)->toQueryString(),
                 'generate' => 1,
             ]));
 
@@ -114,10 +309,33 @@ class PlanBuilder extends Component
             return;
         }
 
-        $result = $planner->generate($island, $this->budgetUsd, $this->days, $request->user());
+        $prefs = PlanInterests::fromArray($this->interests);
+        $matchCount = $prefs->filterListings(
+            \App\Models\Listing::query()
+                ->where('island_id', $island->id)
+                ->where('is_active', true)
+                ->get(),
+        )->count();
+
+        if ($matchCount === 0) {
+            $this->error = 'No listings match your selected activities on this island. Try ticking more interests.';
+            $this->isGenerating = false;
+
+            return;
+        }
+
+        $result = $planner->generate(
+            $island,
+            $this->budgetUsd,
+            $this->days,
+            $request->user(),
+            $prefs,
+        );
         $this->applyPlan($result);
+        $this->planIslandId = $island->id;
         $this->hasPlan = true;
         $this->isGenerating = false;
+        $this->closeSwapBar();
     }
 
     protected function applyPlan(PlanResult $plan): void
@@ -127,6 +345,18 @@ class PlanBuilder extends Component
         $this->spentUsd = $plan->spentUsd;
         $this->summary = $plan->summary;
         $this->planDays = $plan->planDays;
+    }
+
+    protected function recalculateSpent(): void
+    {
+        $this->spentUsd = app(PlanItemAlternatives::class)->spentUsd($this->planDays);
+    }
+
+    protected function planIsland(): ?Island
+    {
+        return $this->planIslandId
+            ? Island::find($this->planIslandId)
+            : null;
     }
 
     protected function resolveIsland(Request $request): ?Island

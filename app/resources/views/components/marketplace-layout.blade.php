@@ -15,16 +15,10 @@
 </head>
 <body class="font-sans antialiased bg-moodhu-50 min-h-screen text-muraka-900">
 
-    <header class="sticky top-0 z-40 backdrop-blur bg-white/90 border-b border-moodhu-200">
-        <div class="w-full px-6 sm:px-10 lg:px-16 py-3 flex items-center justify-between gap-4">
-            <a href="{{ route('home') }}" class="flex items-center gap-2.5">
-                <span class="inline-flex items-center justify-center w-9 h-9 rounded-xl bg-madi-500 text-white shadow-card">
-                    <x-icons.icon name="waves" class="w-5 h-5" />
-                </span>
-                <div>
-                    <div class="font-bold leading-tight text-muraka-900">AfterArrival</div>
-                    <div class="text-[10px] uppercase tracking-label text-muraka-500">Maldives · In-stay</div>
-                </div>
+    <header class="site-header sticky top-0 z-40 backdrop-blur bg-white/90 border-b border-moodhu-200">
+        <div class="site-header-inner w-full px-6 sm:px-10 lg:px-16 py-2 flex items-center justify-between gap-4">
+            <a href="{{ route('home') }}" class="inline-flex shrink-0 items-center" aria-label="AfterArrival home">
+                <x-ui.brand-logo :size="160" class="header-brand-lottie" />
             </a>
 
             <nav class="hidden sm:flex items-center gap-1 text-sm">
