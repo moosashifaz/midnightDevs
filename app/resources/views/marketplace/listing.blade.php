@@ -77,7 +77,7 @@
 
                 <div class="text-[11px] text-muraka-500 mt-3 text-center flex items-center justify-center gap-1">
                     <x-icons.icon name="credit-card" class="w-3.5 h-3.5" />
-                    Pay via <span class="font-mono text-madi-700">BML Swipe</span>. Escrow until voucher scan.
+                    Pay via <span class="font-mono text-madi-700">BML Swipe</span>.
                 </div>
             </x-ui.card>
 
