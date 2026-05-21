@@ -251,16 +251,16 @@
 
     /* Logo renders larger than the bar; negative margin keeps the header compact */
     .header-brand-lottie {
-        width: 8rem !important;
-        height: 8rem !important;
-        margin-block: -2.25rem;
+        width: 10.5rem !important;
+        height: 10.5rem !important;
+        margin-block: -3.25rem;
     }
 
     @media (min-width: 640px) {
         .header-brand-lottie {
-            width: 10rem !important;
-            height: 10rem !important;
-            margin-block: -2.75rem;
+            width: 13rem !important;
+            height: 13rem !important;
+            margin-block: -4rem;
         }
     }
 
