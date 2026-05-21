@@ -29,14 +29,11 @@
 
         <div class="relative z-10 flex min-h-[inherit] items-center justify-center px-6 sm:px-10 lg:px-16 py-16 sm:py-20">
             <div class="w-full max-w-2xl text-left">
-                <p class="text-xs font-semibold uppercase tracking-label text-moodhu-200">{{ $island?->atoll }} Atoll</p>
                 <h1 class="text-3xl sm:text-4xl lg:text-5xl font-bold mt-2 mb-3 text-white leading-tight">
-                    @if($island) Welcome to {{ $island->name }}.
-                    @else Welcome.
-                    @endif
+                    Discover local food, culture, and experiences.
                 </h1>
                 <p class="text-moodhu-100 text-sm sm:text-base lg:text-lg leading-relaxed max-w-xl">
-                    Find food, laundry, souvenirs, and experiences from local providers on your island. Pay digitally, scan to redeem.
+                    Everything you need on your island — food, laundry, shopping, and experiences. Pay digitally and scan to redeem.
                 </p>
 
                 @if($islands->count() > 1)
