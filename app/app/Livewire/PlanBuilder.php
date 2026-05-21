@@ -46,12 +46,12 @@ class PlanBuilder extends Component
 
     public ?string $planMessage = null;
 
-    public ?int $chooserDayIndex = null;
+    public ?int $swapBarDayIndex = null;
 
-    public ?int $chooserItemIndex = null;
+    public ?int $swapBarItemIndex = null;
 
     /** @var list<array{listing: array<string, mixed>, is_current: bool}> */
-    public array $chooserOptions = [];
+    public array $swapBarOptions = [];
 
     public function mount(Request $request): void
     {
@@ -109,52 +109,67 @@ class PlanBuilder extends Component
         session()->flash('status', 'Plan saved to My plans.');
     }
 
-    public function swapPlanItem(int $dayIndex, int $itemIndex): void
+    public function bookAll(): void
     {
-        if (! $this->hasPlan || ! isset($this->planDays[$dayIndex]['items'][$itemIndex])) {
+        if (! $this->hasPlan) {
             return;
         }
 
-        $island = $this->planIsland();
-        if (! $island) {
-            $this->planMessage = 'Select an island first, then regenerate your plan.';
+        $items = $this->planItemsForCheckout();
 
-            return;
-        }
-
-        $listingId = (int) ($this->planDays[$dayIndex]['items'][$itemIndex]['listing']['id'] ?? 0);
-        $current = Listing::query()->with('provider')->find($listingId);
-        if (! $current) {
-            $this->planMessage = 'Could not load this listing. Try regenerating your plan.';
+        if ($items === []) {
+            $this->planMessage = 'Add activities to your plan before booking.';
 
             return;
         }
 
-        $swapper = app(PlanItemAlternatives::class);
-        $candidates = $swapper->forSlot(
-            $island,
-            $this->planDays,
-            $dayIndex,
-            $itemIndex,
-            $this->budgetUsd,
-        );
+        session([
+            'plan_book_all' => [
+                'island_name' => $this->islandName,
+                'summary' => $this->summary,
+                'spent_usd' => $this->spentUsd,
+                'items' => $items,
+                'return_url' => route('plan'),
+            ],
+        ]);
 
-        $next = $swapper->nextSwap($current, $candidates);
-        if (! $next) {
-            $this->planMessage = 'No other options in this category within your budget — try Remove or Regenerate.';
-
-            return;
-        }
-
-        $this->applyListingToSlot($dayIndex, $itemIndex, $next);
-        $this->closeChooser();
-        $this->planMessage = 'Swapped to '.$next->title.'.';
+        $this->redirect(route('plan.book-all'), navigate: true);
     }
 
-    public function toggleChooseOptions(int $dayIndex, int $itemIndex): void
+    /**
+     * @return list<array{slug: string, title: string, note: string|null, day: int|null, price_usd: float, price_mvr: float}>
+     */
+    protected function planItemsForCheckout(): array
     {
-        if ($this->chooserDayIndex === $dayIndex && $this->chooserItemIndex === $itemIndex) {
-            $this->closeChooser();
+        $items = [];
+
+        foreach ($this->planDays as $dayBlock) {
+            foreach ($dayBlock['items'] ?? [] as $item) {
+                $listing = $item['listing'] ?? [];
+                $slug = $listing['slug'] ?? null;
+
+                if (! $slug) {
+                    continue;
+                }
+
+                $items[] = [
+                    'slug' => (string) $slug,
+                    'title' => (string) ($listing['title'] ?? 'Listing'),
+                    'note' => isset($item['note']) ? (string) $item['note'] : null,
+                    'day' => isset($dayBlock['day']) ? (int) $dayBlock['day'] : null,
+                    'price_usd' => (float) ($listing['price_usd'] ?? 0),
+                    'price_mvr' => (float) ($listing['price_mvr'] ?? 0),
+                ];
+            }
+        }
+
+        return $items;
+    }
+
+    public function toggleSwapOptions(int $dayIndex, int $itemIndex): void
+    {
+        if ($this->swapBarDayIndex === $dayIndex && $this->swapBarItemIndex === $itemIndex) {
+            $this->closeSwapBar();
 
             return;
         }
@@ -184,29 +199,29 @@ class PlanBuilder extends Component
             return;
         }
 
-        $this->chooserDayIndex = $dayIndex;
-        $this->chooserItemIndex = $itemIndex;
-        $this->chooserOptions = $options;
+        $this->swapBarDayIndex = $dayIndex;
+        $this->swapBarItemIndex = $itemIndex;
+        $this->swapBarOptions = $options;
         $this->planMessage = null;
     }
 
-    public function closeChooser(): void
+    public function closeSwapBar(): void
     {
-        $this->chooserDayIndex = null;
-        $this->chooserItemIndex = null;
-        $this->chooserOptions = [];
+        $this->swapBarDayIndex = null;
+        $this->swapBarItemIndex = null;
+        $this->swapBarOptions = [];
     }
 
-    public function pickPlanItem(int $dayIndex, int $itemIndex, int $listingId): void
+    public function pickSwapOption(int $dayIndex, int $itemIndex, int $listingId): void
     {
-        if ($this->chooserDayIndex !== $dayIndex || $this->chooserItemIndex !== $itemIndex) {
+        if ($this->swapBarDayIndex !== $dayIndex || $this->swapBarItemIndex !== $itemIndex) {
             return;
         }
 
-        $allowed = collect($this->chooserOptions)
+        $allowed = collect($this->swapBarOptions)
             ->first(fn (array $option) => (int) ($option['listing']['id'] ?? 0) === $listingId);
 
-        if (! $allowed) {
+        if (! $allowed || ($allowed['is_current'] ?? false)) {
             return;
         }
 
@@ -216,8 +231,8 @@ class PlanBuilder extends Component
         }
 
         $this->applyListingToSlot($dayIndex, $itemIndex, $listing);
-        $this->closeChooser();
-        $this->planMessage = 'Chosen: '.$listing->title.'.';
+        $this->closeSwapBar();
+        $this->planMessage = 'Swapped to '.$listing->title.'.';
     }
 
     public function removePlanItem(int $dayIndex, int $itemIndex): void
@@ -233,7 +248,7 @@ class PlanBuilder extends Component
         $this->planDays = $planDays;
 
         $this->recalculateSpent();
-        $this->closeChooser();
+        $this->closeSwapBar();
         $this->planMessage = 'Removed from your plan.';
     }
 
@@ -320,7 +335,7 @@ class PlanBuilder extends Component
         $this->planIslandId = $island->id;
         $this->hasPlan = true;
         $this->isGenerating = false;
-        $this->closeChooser();
+        $this->closeSwapBar();
     }
 
     protected function applyPlan(PlanResult $plan): void

@@ -35,6 +35,11 @@
         @endif
 
         <div class="mt-8 flex flex-wrap gap-3">
+            @if(! empty($savedPlan->plan_data))
+                <x-ui.button variant="primary" :href="route('plans.book-all', $savedPlan)">
+                    Book all
+                </x-ui.button>
+            @endif
             <x-ui.button :href="route('plan', ['budget' => $savedPlan->budget_usd, 'days' => $savedPlan->days])">
                 Build a new plan
             </x-ui.button>

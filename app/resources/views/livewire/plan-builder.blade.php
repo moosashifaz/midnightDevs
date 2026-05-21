@@ -51,6 +51,17 @@
                                 <span wire:loading.remove wire:target="savePlan">Save plan</span>
                                 <span wire:loading wire:target="savePlan">Saving…</span>
                             </button>
+                            <button
+                                type="button"
+                                wire:click="bookAll"
+                                class="btn-secondary"
+                                wire:loading.attr="disabled"
+                                wire:target="bookAll"
+                                @disabled(count($planDays) === 0)
+                            >
+                                <span wire:loading.remove wire:target="bookAll">Book all</span>
+                                <span wire:loading wire:target="bookAll">Loading…</span>
+                            </button>
                             <a
                                 href="{{ $this->googleCalendarUrl }}"
                                 target="_blank"
@@ -129,7 +140,7 @@
         @endif
 
         <p class="text-xs text-muraka-500 mb-6 rounded-xl border border-moodhu-200 bg-moodhu-50/80 px-3 py-2">
-            This is a flexible draft — use <strong class="text-muraka-700">Choose</strong> to pick from options, <strong class="text-muraka-700">Swap</strong> for a quick alternative, or <strong class="text-muraka-700">Remove</strong> to drop an activity.
+            This is a flexible draft — tap <strong class="text-muraka-700">Swap</strong> to pick another listing, or <strong class="text-muraka-700">Remove</strong> to drop an activity.
         </p>
 
         @if(count($planDays) === 0)
@@ -149,9 +160,9 @@
                             :items="$dayBlock['items']"
                             :day-index="$dayIndex"
                             :editable="auth()->check()"
-                            :chooser-open="$chooserDayIndex === $dayIndex"
-                            :chooser-item-index="$chooserItemIndex"
-                            :chooser-options="$chooserOptions"
+                            :swap-bar-open="$swapBarDayIndex === $dayIndex"
+                            :swap-bar-item-index="$swapBarItemIndex"
+                            :swap-bar-options="$swapBarOptions"
                             :show-book="auth()->check()"
                             :show-ask="auth()->check()"
                             timeline
@@ -160,10 +171,30 @@
                 @endforeach
             </div>
 
-            <div class="mt-8 card p-5">
-                <p class="text-[11px] text-muraka-400">
-                    Flights and guesthouse stays not included. Book each item separately — funds held in escrow until you redeem your QR voucher.
-                </p>
+            <div class="mt-8 card p-5 sm:p-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div>
+                    <p class="font-semibold text-muraka-900 mb-1">Ready to book?</p>
+                    <p class="text-sm text-muraka-600">
+                        Checkout each activity in your plan — separate escrow per item, QR voucher per order.
+                    </p>
+                    <p class="text-[11px] text-muraka-400 mt-2">
+                        Flights and guesthouse stays not included.
+                    </p>
+                </div>
+                @auth
+                    <button
+                        type="button"
+                        wire:click="bookAll"
+                        class="btn-primary px-6 py-3 text-base shrink-0"
+                        wire:loading.attr="disabled"
+                        wire:target="bookAll"
+                    >
+                        <span wire:loading.remove wire:target="bookAll">Book all</span>
+                        <span wire:loading wire:target="bookAll">Loading…</span>
+                    </button>
+                @else
+                    <a href="{{ route('login') }}" class="btn-primary px-6 py-3 text-base shrink-0 text-center">Log in to book all</a>
+                @endauth
             </div>
         @endif
         </section>

@@ -167,6 +167,35 @@
         }
     }
 
+    .plan-swap-bar {
+        @apply rounded-xl border border-madi-200 bg-gradient-to-r from-madi-50/60 via-white to-moodhu-50/80 p-3;
+    }
+
+    .plan-swap-bar-track {
+        scrollbar-width: thin;
+        scrollbar-color: rgb(89 153 207 / 0.45) transparent;
+    }
+
+    .plan-swap-bar-track::-webkit-scrollbar {
+        height: 6px;
+    }
+
+    .plan-swap-bar-track::-webkit-scrollbar-thumb {
+        border-radius: 9999px;
+        background: rgb(89 153 207 / 0.45);
+    }
+
+    .plan-swap-bar-card {
+        width: 8.5rem;
+        min-height: 8.75rem;
+    }
+
+    @media (min-width: 640px) {
+        .plan-swap-bar-card {
+            width: 9.5rem;
+        }
+    }
+
     .planner-timeline-day {
         @apply relative pl-8 pb-8 last:pb-0;
     }

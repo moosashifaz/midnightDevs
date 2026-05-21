@@ -6,9 +6,9 @@
     'showAsk' => false,
     'editable' => false,
     'dayIndex' => 0,
-    'chooserOpen' => false,
-    'chooserItemIndex' => null,
-    'chooserOptions' => [],
+    'swapBarOpen' => false,
+    'swapBarItemIndex' => null,
+    'swapBarOptions' => [],
     'compact' => false,
     'timeline' => false,
 ])
@@ -38,8 +38,8 @@
                             :editable="$editable"
                             :day-index="$dayIndex"
                             :item-index="$itemIndex"
-                            :chooser-open="$chooserOpen && $chooserItemIndex === $itemIndex"
-                            :chooser-options="$chooserOpen && $chooserItemIndex === $itemIndex ? $chooserOptions : []"
+                            :swap-bar-open="$swapBarOpen && $swapBarItemIndex === $itemIndex"
+                            :swap-bar-options="$swapBarOpen && $swapBarItemIndex === $itemIndex ? $swapBarOptions : []"
                             :compact="$compact"
                         />
                     </div>
