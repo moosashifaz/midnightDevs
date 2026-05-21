@@ -42,7 +42,7 @@
             </div>
         </div>
 
-        <aside class="lg:col-span-2 lg:sticky lg:top-20 self-start space-y-4">
+        <aside class="lg:col-span-2 lg:sticky lg:top-[calc(var(--site-header-height)+1rem)] self-start space-y-4">
             <x-ui.card class="p-5">
                 <x-ui.price :usd="$listing->price_usd" :mvr="$listing->price_mvr" size="lg" />
 

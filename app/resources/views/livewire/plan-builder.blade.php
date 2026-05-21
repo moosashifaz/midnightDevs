@@ -22,8 +22,7 @@
             @endif
         </h1>
         @if($isGenerating)
-            <p class="text-sm text-madi-700 mt-1 flex items-center gap-2">
-                <span class="planner-btn-spinner shrink-0" aria-hidden="true"></span>
+            <p class="text-sm text-madi-700 mt-1">
                 Matching your selected activities to live listings and your budget.
             </p>
         @elseif($islandName)
@@ -31,9 +30,10 @@
         @endif
     </div>
 
+    @unless($isGenerating)
     <div @class([
         'mb-6 max-w-4xl mx-auto',
-        'sticky top-[4.25rem] z-30 -mx-6 sm:-mx-10 lg:-mx-16 px-6 sm:px-10 lg:px-16 py-3 bg-moodhu-50/95 backdrop-blur border-b border-moodhu-200' => ! $hasPlan && ! $isGenerating,
+        'sticky top-[var(--site-header-height)] z-30 -mx-6 sm:-mx-10 lg:-mx-16 px-6 sm:px-10 lg:px-16 py-3 bg-moodhu-50/95 backdrop-blur border-b border-moodhu-200' => ! $hasPlan,
     ])>
         <div class="card p-4 sm:p-5">
             <form wire:submit.prevent="generate" class="space-y-4" x-data="{ budget: @entangle('budgetUsd').live }">
@@ -51,6 +51,16 @@
                                 <span wire:loading.remove wire:target="savePlan">Save plan</span>
                                 <span wire:loading wire:target="savePlan">Saving…</span>
                             </button>
+                            <a
+                                href="{{ $this->googleCalendarUrl }}"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                class="btn-ghost inline-flex items-center gap-1.5"
+                                title="Demo: opens Google Calendar with your first activity and full itinerary in the notes"
+                            >
+                                <x-icons.icon name="calendar" class="w-4 h-4 shrink-0" />
+                                Add to my Google Calendar
+                            </a>
                         @else
                             <a href="{{ route('login') }}" class="btn-primary">Log in to generate your plan</a>
                         @endauth
@@ -102,21 +112,10 @@
             </form>
         </div>
     </div>
+    @endunless
 
     @if($isGenerating)
-        <div class="max-w-3xl mx-auto mb-6 rounded-2xl border border-madi-200 bg-madi-50/60 px-4 py-3 flex items-center gap-3" role="status" aria-live="polite">
-            <span class="planner-btn-spinner shrink-0" aria-hidden="true"></span>
-            <p class="text-sm font-medium text-madi-800">AI is building your island itinerary — this usually takes a few seconds.</p>
-        </div>
-        <div class="max-w-3xl mx-auto space-y-6" aria-busy="true" aria-label="Generating plan">
-            @for($i = 0; $i < 3; $i++)
-                <div class="space-y-3">
-                    <div class="planner-skeleton h-4 w-32"></div>
-                    <div class="planner-skeleton h-20 w-full"></div>
-                    <div class="planner-skeleton h-20 w-full"></div>
-                </div>
-            @endfor
-        </div>
+        <x-ui.planner-building-overlay :days="$days" />
     @elseif($hasPlan)
         <section class="max-w-3xl mx-auto scroll-mt-6" aria-label="Your itinerary">
         @if($summary)

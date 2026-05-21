@@ -5,9 +5,11 @@ namespace App\Livewire;
 use App\Models\Island;
 use App\Models\SavedPlan;
 use App\Services\AIPlannerService;
+use App\Services\Planner\PlanGoogleCalendarUrl;
 use App\Services\Planner\PlanInterests;
 use App\Services\Planner\PlanResult;
 use Illuminate\Http\Request;
+use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
@@ -91,6 +93,17 @@ class PlanBuilder extends Component
         ]);
 
         session()->flash('status', 'Plan saved to My plans.');
+    }
+
+    #[Computed]
+    public function googleCalendarUrl(): string
+    {
+        return app(PlanGoogleCalendarUrl::class)->build(
+            islandName: $this->islandName ?? 'Maldives',
+            days: $this->days,
+            planDays: $this->planDays,
+            summary: $this->summary,
+        );
     }
 
     public function generate(Request $request, AIPlannerService $planner): void

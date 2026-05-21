@@ -63,3 +63,15 @@ test('plan builder loads interests from query string', function () {
         ->test(PlanBuilder::class)
         ->assertSet('interests', ['snorkeling', 'dolphins']);
 });
+
+test('plan builder shows fullscreen building overlay while generating', function () {
+    $user = User::factory()->create();
+
+    Livewire::actingAs($user)
+        ->test(PlanBuilder::class)
+        ->set('isGenerating', true)
+        ->assertSee('Creating your island plan')
+        ->assertSee('Matching live listings')
+        ->assertSeeHtml('data-planner-lottie')
+        ->assertDontSee('Ready when you are');
+});

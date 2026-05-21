@@ -84,7 +84,7 @@
         </form>
 
         <aside class="lg:col-span-2 self-start">
-            <x-ui.card class="p-5 sticky top-20">
+            <x-ui.card class="p-5 sticky top-[calc(var(--site-header-height)+1rem)]">
                 <h3 class="font-semibold mb-3">Total breakdown</h3>
                 <dl class="text-sm space-y-1.5">
                     <div class="flex justify-between"><dt class="text-muraka-500">Base price</dt><dd>${{ number_format($listing->price_usd / 1.16, 2) }}</dd></div>
