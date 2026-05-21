@@ -12,7 +12,7 @@
 
 ## The team
 
-**midnightDevs** — Co.Lab 26 Hackathon (NADCC / BML / MINDCo)
+**AfterCode** — Co.Lab 26 Hackathon (NADCC / BML / MINDCo)
 
 - **Moosa Shifaz** — [@moosashifaz](https://github.com/moosashifaz)
 - **Mohamed Adhuham** — [@adhham](https://github.com/adhham)
