@@ -21,7 +21,7 @@
 **AfterCode** — Co.Lab 26 Hackathon (Maldives AI Lab / BML / MINDCo)
 
 - **Moosa Shifaz** — [@moosashifaz](https://github.com/moosashifaz)
-- **Mohamed Adhuham** — [@adhham](https://github.com/adhham)
+- **Mohamed Adhuham** — [@adhuham](https://github.com/adhuham)
 
 **Track:** Track 2 — Fintech with BML Payment APIs
 
